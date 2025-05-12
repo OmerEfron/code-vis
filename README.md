@@ -1,64 +1,102 @@
 # Algorithm Visualization Project
 
-An interactive web application for visualizing sorting algorithms, specifically designed to help understand the merge sort algorithm through the metaphor of organizing exam papers.
+An interactive web application for visualizing and understanding algorithms through metaphor-based learning. This project uses AI to analyze algorithms and create intuitive visualizations that help users understand complex algorithms through familiar real-world metaphors.
 
 ## Features
 
-- Interactive visualization of the merge sort algorithm
-- Step-by-step playback controls
-- Real-time metrics tracking (comparisons, array accesses, memory usage)
-- Visual representation of algorithm structure
-- Customizable animation speed
-- Progress tracking
+- 🎯 **Algorithm Analysis**: Automatic analysis of algorithm code to identify patterns and complexity
+- 🎨 **Metaphor-Based Visualization**: Dynamic visualization of algorithms using relatable real-world metaphors
+- 🔄 **Interactive Learning**: Step-by-step visualization with playback controls
+- 🧠 **Multiple Learning Styles**: Support for visual, kinesthetic, and auditory learning styles
+- 🤖 **AI-Powered**: Utilizes LLM for intelligent code analysis and metaphor generation
 
 ## Tech Stack
 
-- React.js
-- React Konva for canvas-based visualization
+### Frontend
+- Next.js
+- React
+- React-Konva for canvas-based visualizations
 - TailwindCSS for styling
+
+### Backend
+- Node.js
+- Express
+- OpenAI API for code analysis
+- WebSocket for real-time updates
 
 ## Getting Started
 
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- OpenAI API key (for code analysis features)
+
+### Installation
+
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/OmerEfron/code-vis.git
+cd code-vis
 ```
 
-2. Install dependencies:
+2. Install dependencies for both frontend and backend:
 ```bash
+# Install frontend dependencies
+cd frontend
+npm install
+
+# Install backend dependencies
+cd ../backend
 npm install
 ```
 
-3. Start the development server:
+3. Set up environment variables:
 ```bash
+# In backend directory
+cp .env.example .env
+# Edit .env and add your OpenAI API key
+```
+
+4. Start the development servers:
+```bash
+# Start backend server (from backend directory)
+npm run dev
+
+# Start frontend server (from frontend directory)
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+5. Open your browser and navigate to `http://localhost:3000`
 
 ## Project Structure
 
 ```
-/
-├── frontend/
+code-vis/
+├── frontend/               # Next.js frontend application
 │   ├── src/
-│   │   ├── components/
-│   │   │   └── AlgorithmVisualization.js
-│   │   └── ...
-│   └── ...
-├── backend/
+│   │   ├── app/           # Next.js app directory
+│   │   ├── components/    # React components
+│   │   └── constants/     # Shared constants and examples
+│   └── public/            # Static assets
+├── backend/               # Node.js backend server
 │   ├── src/
-│   │   ├── models/
-│   │   │   └── Algorithm.js
-│   │   └── ...
-│   └── ...
-└── ...
+│   │   ├── routes/       # API routes
+│   │   ├── services/     # Business logic and services
+│   │   └── server.js     # Server entry point
+│   └── .env.example      # Example environment variables
+└── README.md             # This file
 ```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 

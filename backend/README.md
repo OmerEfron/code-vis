@@ -1,71 +1,116 @@
 # Algorithm Visualization Backend
 
-This is the backend service for the Algorithm Visualization project. It provides APIs for parsing algorithm code and generating visualization states based on metaphorical scenarios.
+The backend server for the Algorithm Visualization project, providing code analysis and metaphor generation services.
 
-## Project Structure
+## Features
+
+- 🤖 AI-powered code analysis using OpenAI
+- 🎯 Algorithm pattern recognition
+- 🎨 Metaphor generation for different learning styles
+- 🔄 Real-time updates via WebSocket
+- 📊 Performance metrics calculation
+
+## Tech Stack
+
+- Node.js
+- Express.js
+- OpenAI API
+- WebSocket (ws)
+- dotenv for configuration
+
+## Directory Structure
 
 ```
 src/
-├── server.js              # Main Express server entry point
-├── controllers/          # Request handlers
-│   └── visualizationController.js
-├── models/              # Data models
-│   └── Algorithm.js     # Base and specific algorithm implementations
-├── parsers/             # Code parsers
-│   └── cParser.js       # C code parser
-└── routes/              # API routes
-    └── visualizationRoutes.js
+├── routes/                # API route definitions
+│   └── llmAnalysisRoutes.js  # LLM analysis endpoints
+├── services/             # Business logic and services
+│   ├── llm/             # LLM-related services
+│   │   ├── analyzers/   # Code analysis modules
+│   │   ├── factory.js   # LLM provider factory
+│   │   └── providers/   # LLM service providers
+│   └── metrics/         # Performance metrics
+└── server.js            # Server entry point
 ```
 
-## Setup
+## Getting Started
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
+2. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env and add your OpenAI API key
+```
 
-3. For production:
-   ```bash
-   npm start
-   ```
+3. Start the development server:
+```bash
+npm run dev
+```
+
+The server will start on port 3001 by default.
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+PORT=3001
+OPENAI_API_KEY=your_api_key_here
+NODE_ENV=development
+```
 
 ## API Endpoints
 
-### Generate Visualization
-```
-POST /api/visualizations/generate
-Content-Type: application/json
+### Code Analysis
 
+- `POST /api/analyze`
+  - Analyzes code and generates visualization metadata
+  - Request body: `{ code: string }`
+  - Response: Analysis results including metaphors and visualization states
+
+### WebSocket Events
+
+- `connection`: Client connected
+- `analyze`: Receive code for analysis
+- `analysis_complete`: Send analysis results
+- `error`: Send error information
+
+## Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm start` - Start production server
+- `npm test` - Run tests
+- `npm run lint` - Run ESLint
+
+## Development Guidelines
+
+1. Follow RESTful API design principles
+2. Add appropriate error handling
+3. Use async/await for asynchronous operations
+4. Keep the code modular and maintainable
+5. Add logging for important operations
+6. Write meaningful comments and documentation
+
+## Error Handling
+
+The backend implements a centralized error handling system:
+
+```javascript
 {
-    "code": "// C code here",
-    "scenario": {
-        "name": "Teacher Organizing Exams",
-        "description": "...",
-        "metaphor": { ... }
-    }
+  success: boolean,
+  error?: {
+    message: string,
+    code: string,
+    details?: any
+  },
+  data?: any
 }
 ```
 
-### Get Available Scenarios
-```
-GET /api/visualizations/scenarios
-```
+## Contributing
 
-## Adding New Algorithms
-
-1. Create a new class extending the `Algorithm` base class
-2. Implement required methods:
-   - `initialize()`
-   - `nextState()`
-   - `toMetaphorState()`
-3. Add detection pattern in `CParser`
-4. Register in the algorithm factory in `visualizationController.js`
-
-## Adding New Scenarios
-
-Add new scenario definitions in `visualizationRoutes.js` under the `/scenarios` endpoint. 
+See the main project README for contribution guidelines. 
