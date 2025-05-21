@@ -8,12 +8,19 @@ class OpenAIProvider extends BaseLLMProvider {
     }
 
     async initialize() {
-        if (!this.config.apiKey) {
-            throw new Error('OpenAI API key is required');
+        if (!this.client) {
+            if (!process.env.OPENAI_API_KEY) {
+                throw new Error('OPENAI_API_KEY environment variable is not set');
+            }
+            try {
+                this.client = new OpenAI({
+                    apiKey: process.env.OPENAI_API_KEY
+                });
+            } catch (error) {
+                console.error('Failed to initialize OpenAI client:', error);
+                throw new Error(`OpenAI initialization failed: ${error.message}`);
+            }
         }
-        this.client = new OpenAI({
-            apiKey: this.config.apiKey
-        });
     }
 
     async analyze(prompt, options = {}) {
@@ -83,18 +90,13 @@ class OpenAIProvider extends BaseLLMProvider {
         return JSON.parse(response);
     }
 
-    async generateMetaphors(algorithmType, options = {}) {
+    async generateMetaphors(code, options = {}) {
         const prompt = `
-        Generate multiple real-life metaphors for explaining the ${algorithmType} algorithm.
-        Focus on creating diverse, interactive, and visually-rich scenarios that mirror the algorithm's steps.
-        Include at least 2-3 different metaphors targeting different learning styles.
+        Create visualization-friendly metaphors for explaining the following code.
+        Focus on creating metaphors that can be easily visualized and animated.
         
-        Consider these aspects for each metaphor:
-        1. Physical/Tangible representations
-        2. Visual elements that can be animated
-        3. Interactive elements for user engagement
-        4. Step-by-step progression
-        5. Clear mapping to algorithm concepts
+        Code:
+        ${code}
         
         Provide the response in JSON format with the following structure:
         {
@@ -102,10 +104,10 @@ class OpenAIProvider extends BaseLLMProvider {
                 {
                     "name": "string",
                     "description": "string",
-                    "learningStyle": "visual|kinesthetic|auditory",
+                    "learningStyle": "visual" | "auditory" | "kinesthetic",
                     "steps": ["string"],
                     "elements": {
-                        "elementName": "metaphorical representation"
+                        "elementName": "description"
                     },
                     "visualProperties": {
                         "primaryElements": ["string"],
@@ -121,17 +123,10 @@ class OpenAIProvider extends BaseLLMProvider {
                             "secondary": "string",
                             "highlight": "string"
                         }
-                    },
-                    "suggestedControls": ["string"]
+                    }
                 }
             ]
         }
-        
-        Ensure each metaphor is:
-        1. Easily understandable by non-technical users
-        2. Visually representable in a web interface
-        3. Suitable for interactive animation
-        4. Mapped clearly to algorithm steps
         `;
 
         const response = await this.analyze(prompt, {
