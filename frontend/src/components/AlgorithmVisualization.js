@@ -1,299 +1,393 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Stage, Layer, Rect, Text, Group, Arrow, Circle } from 'react-konva';
-import { VisualizationParser } from '../utils/visualizationParser';
-import VisualizationContainer from './animations/VisualizationContainer';
-import VisualizationControls from './animations/VisualizationControls';
-import ErrorBoundary from './common/ErrorBoundary';
-
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 600;
-const ELEMENT_HEIGHT = 80;
-const ELEMENT_WIDTH = 100;
-const ELEMENT_MARGIN = 20;
-const COLORS = {
-    primary: '#4A90E2',
-    secondary: '#F5A623',
-    highlight: '#7ED321',
-    background: '#F8F9FA',
-    text: '#2C3E50',
-    border: '#E1E8ED',
-    success: '#2ECC71',
-    current: '#FF6B6B'
-};
+import { Card, Button, ProgressBar, Alert } from './ui';
 
 const AlgorithmVisualization = ({ data }) => {
-    const [error, setError] = useState(null);
-    const [currentState, setCurrentState] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [playbackSpeed, setPlaybackSpeed] = useState(1000);
-    const [states, setStates] = useState([]);
-    const [parsedData, setParsedData] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playSpeed, setPlaySpeed] = useState(1000); // milliseconds
+  const [visualizationData, setVisualizationData] = useState(null);
+  const [error, setError] = useState(null);
 
-    // Parse and validate data on component mount or when data changes
-    useEffect(() => {
-        if (!data) return;
+  // Initialize visualization data
+  useEffect(() => {
+    if (data?.success && data?.analysis?.metaphors?.[0]) {
+      const metaphor = data.analysis.metaphors[0];
+      generateVisualizationSteps(metaphor);
+    } else {
+      setError('No visualization data available');
+    }
+  }, [data]);
 
-        try {
-            const parsed = VisualizationParser.validateAndParseData(data);
-            setParsedData(parsed);
-            setError(null);
-        } catch (err) {
-            console.error('Visualization data error:', err);
-            setError(err.message);
-            setParsedData(null);
+  // Auto-play functionality
+  useEffect(() => {
+    let interval;
+    if (isPlaying && visualizationData && currentStep < visualizationData.steps.length - 1) {
+      interval = setInterval(() => {
+        setCurrentStep(prev => prev + 1);
+      }, playSpeed);
+    } else if (isPlaying && currentStep >= visualizationData?.steps?.length - 1) {
+      setIsPlaying(false);
+    }
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentStep, playSpeed, visualizationData]);
+
+  const generateVisualizationSteps = (metaphor) => {
+    try {
+      // Generate a more comprehensive visualization based on the metaphor
+      const steps = [];
+      const elements = metaphor.elements || {};
+      const metaphorSteps = metaphor.steps || [];
+      
+      // Create example data array for demonstration
+      const exampleArray = [64, 34, 25, 12, 22, 11, 90];
+      
+      // Initial state
+      steps.push({
+        title: 'Initial State',
+        description: metaphorSteps[0] || 'Starting the algorithm visualization',
+        array: [...exampleArray],
+        activeIndices: [],
+        comparingIndices: [],
+        sortedIndices: [],
+        highlightedIndices: [],
+        metaphorDescription: `${metaphor.description} - We begin with unsorted ${Object.keys(elements)[0] || 'elements'}.`,
+        complexity: {
+          timeComplexity: data?.analysis?.algorithm?.timeComplexity || 'O(n log n)',
+          spaceComplexity: data?.analysis?.algorithm?.spaceComplexity || 'O(n)',
+          currentOperation: 'Initialization'
         }
-    }, [data]);
+      });
 
-    // Generate states when parsed data changes
-    useEffect(() => {
-        if (!parsedData) return;
+      // Generate intermediate steps based on metaphor
+      metaphorSteps.slice(1).forEach((step, index) => {
+        const stepIndex = index + 1;
+        const newArray = [...exampleArray];
         
-        try {
-            const newStates = generateStates(parsedData);
-            setStates(newStates);
-            setCurrentState(0);
-            setIsPlaying(false);
-        } catch (err) {
-            console.error('State generation error:', err);
-            setError('Failed to generate visualization states');
+        // Simulate algorithm progression
+        const activeIdx = stepIndex % newArray.length;
+        const comparingIdx = (stepIndex + 1) % newArray.length;
+        
+        steps.push({
+          title: `Step ${stepIndex}`,
+          description: step,
+          array: newArray,
+          activeIndices: [activeIdx],
+          comparingIndices: [comparingIdx],
+          sortedIndices: Array.from({ length: Math.floor(stepIndex / 2) }, (_, i) => i),
+          highlightedIndices: [],
+          metaphorDescription: `${step} - ${getMetaphorExplanation(metaphor.name, stepIndex)}`,
+          complexity: {
+            timeComplexity: data?.analysis?.algorithm?.timeComplexity || 'O(n log n)',
+            spaceComplexity: data?.analysis?.algorithm?.spaceComplexity || 'O(n)',
+            currentOperation: `Comparing elements at positions ${activeIdx} and ${comparingIdx}`
+          }
+        });
+      });
+
+      // Final sorted state
+      const sortedArray = [...exampleArray].sort((a, b) => a - b);
+      steps.push({
+        title: 'Completed',
+        description: 'Algorithm execution completed successfully!',
+        array: sortedArray,
+        activeIndices: [],
+        comparingIndices: [],
+        sortedIndices: Array.from({ length: sortedArray.length }, (_, i) => i),
+        highlightedIndices: [],
+        metaphorDescription: `${metaphor.description} - All ${Object.keys(elements)[0] || 'elements'} are now properly organized!`,
+        complexity: {
+          timeComplexity: data?.analysis?.algorithm?.timeComplexity || 'O(n log n)',
+          spaceComplexity: data?.analysis?.algorithm?.spaceComplexity || 'O(n)',
+          currentOperation: 'Completed'
         }
-    }, [parsedData]);
+      });
 
-    // Enhanced state generation using parsed data
-    const generateStates = useCallback((parsedData) => {
-        const { metaphor, algorithm, inputs } = parsedData;
-        const example = inputs.examples[0] || { input: { a: [1, 2, 3, 4, 5], n: 5, x: 3 } };
-        const { a: array, n: length, x: target } = example.input;
-
-        const states = [];
-        const { visualProperties } = metaphor;
-        const steps = metaphor.steps;
-
-        // Initial state
-        states.push(createState({
-            array,
-            target,
-            currentIndex: Math.floor(length / 2),
-            left: 0,
-            right: length - 1,
-            found: false,
-            stepIndex: 0,
-            comparisons: 0,
-            arrayAccesses: 0,
-            metaphor,
-            algorithm
-        }));
-
-        // Generate intermediate states
-        let left = 0;
-        let right = length - 1;
-        let comparisons = 0;
-        let arrayAccesses = 0;
-
-        while (left <= right) {
-            const mid = Math.floor((left + right) / 2);
-            comparisons++;
-            arrayAccesses++;
-
-            const stepIndex = Math.min(
-                Math.floor((comparisons / length) * steps.length),
-                steps.length - 1
-            );
-
-            states.push(createState({
-                array,
-                target,
-                currentIndex: mid,
-                left,
-                right,
-                found: array[mid] === target,
-                stepIndex,
-                comparisons,
-                arrayAccesses,
-                metaphor,
-                algorithm
-            }));
-
-            if (array[mid] === target) break;
-            if (array[mid] > target) right = mid - 1;
-            else left = mid + 1;
-        }
-
-        return states;
-    }, []);
-
-    // Helper function to create a state object
-    const createState = ({
-        array,
-        target,
-        currentIndex,
-        left,
-        right,
-        found,
-        stepIndex,
-        comparisons,
-        arrayAccesses,
+      setVisualizationData({
         metaphor,
-        algorithm
-    }) => {
-        const { visualProperties } = metaphor;
-        
-        // Create elements array for visualization
-        const elements = array.map((value, index) => ({
-            id: `element-${index}`,
-            value,
-            index,
-            current: index === currentIndex,
-            isTarget: value === target,
-            checked: index < left || index > right,
-            highlighted: index >= left && index <= right,
-            position: { x: index * 120 + 50, y: 200 }
-        }));
-        
-        return {
-            elements, // Add elements array
-            array,
-            target,
-            currentIndex,
-            left,
-            right,
-            found,
-            description: metaphor.steps[stepIndex] || getDefaultDescription(array[currentIndex], target, found),
-            metrics: {
-                currentPhase: getPhase(comparisons, array.length),
-                efficiency: {
-                    timeComplexity: algorithm.timeComplexity,
-                    spaceComplexity: algorithm.spaceComplexity
-                },
-                comparisons,
-                arrayAccesses,
-                checked: comparisons,
-                progress: ((comparisons / array.length) * 100),
-                target,
-                currentMemoryUsage: {
-                    main: array.length,
-                    auxiliary: 3,
-                    total: array.length + 3
-                }
-            },
-            style: {
-                colors: visualProperties.colorScheme,
-                layout: visualProperties.layout,
-                primaryElements: visualProperties.primaryElements,
-                animations: visualProperties.animations
-            }
-        };
-    };
-
-    const getDefaultDescription = (current, target, found) => {
-        if (found) return `Found ${target} at current position!`;
-        return current > target 
-            ? `${current} is too high, searching left half`
-            : `${current} is too low, searching right half`;
-    };
-
-    const getPhase = (comparisons, length) => {
-        if (comparisons <= length / 3) return 'Initial Search';
-        if (comparisons <= length * 2/3) return 'Deep Search';
-        return 'Final Check';
-    };
-
-    // Playback control
-    useEffect(() => {
-        let timer;
-        if (isPlaying && currentState < states.length - 1) {
-            timer = setTimeout(() => {
-                setCurrentState(prev => prev + 1);
-            }, playbackSpeed);
-        } else if (currentState >= states.length - 1) {
-            setIsPlaying(false);
-        }
-        return () => clearTimeout(timer);
-    }, [isPlaying, currentState, states.length, playbackSpeed]);
-
-    // Event handlers
-    const handlePlay = () => setIsPlaying(!isPlaying);
-    const handleReset = () => {
-        setCurrentState(0);
-        setIsPlaying(false);
-    };
-    const handleStepForward = () => {
-        if (currentState < states.length - 1) {
-            setCurrentState(prev => prev + 1);
-            setIsPlaying(false);
-        }
-    };
-    const handleStepBack = () => {
-        if (currentState > 0) {
-            setCurrentState(prev => prev - 1);
-            setIsPlaying(false);
-        }
-    };
-    const handleSpeedChange = (speed) => setPlaybackSpeed(speed);
-
-    if (error) {
-        return (
-            <div className="p-4 border border-red-300 rounded bg-red-50 text-red-700">
-                <h3 className="font-bold mb-2">Visualization Error</h3>
-                <p>{error}</p>
-            </div>
-        );
+        steps,
+        algorithm: data?.analysis?.algorithm || {}
+      });
+      setError(null);
+    } catch (err) {
+      console.error('Error generating visualization:', err);
+      setError('Failed to generate visualization steps');
     }
+  };
 
-    if (!parsedData || states.length === 0) {
-        return (
-            <div className="p-4 border border-gray-300 rounded bg-gray-50">
-                <p className="text-gray-600">Loading visualization...</p>
-            </div>
-        );
+  const getMetaphorExplanation = (metaphorName, stepIndex) => {
+    const explanations = {
+      'Teacher Organizing Exams': [
+        'The teacher picks up the first pile of exam papers',
+        'Comparing scores between two students\' papers',
+        'Arranging papers by score from lowest to highest',
+        'Creating organized piles of similar scores',
+        'Merging smaller piles into larger organized groups'
+      ],
+      'Library Bookshelf': [
+        'Looking at the middle book on the shelf',
+        'Comparing book numbers to find the target',
+        'Moving to the appropriate section',
+        'Narrowing down the search area',
+        'Finding the exact book location'
+      ],
+      'Treasure Hunt': [
+        'Starting the search at the first location',
+        'Examining each treasure chest sequentially',
+        'Checking if this is the treasure we seek',
+        'Moving to the next potential location',
+        'Continuing the systematic search'
+      ]
+    };
+
+    const metaphorExplanations = explanations[metaphorName] || [
+      'Processing the algorithm step by step',
+      'Comparing elements to determine order',
+      'Moving elements to their correct positions',
+      'Organizing data systematically',
+      'Completing the algorithm execution'
+    ];
+
+    return metaphorExplanations[stepIndex % metaphorExplanations.length];
+  };
+
+  const getComplexityColor = (complexity) => {
+    if (complexity.includes('log') || complexity === 'O(1)') return 'viz-complexity-excellent';
+    if (complexity.includes('n)') && !complexity.includes('n²')) return 'viz-complexity-good';
+    if (complexity.includes('n²')) return 'viz-complexity-average';
+    return 'viz-complexity-poor';
+  };
+
+  const handlePlay = () => setIsPlaying(!isPlaying);
+  const handleReset = () => {
+    setCurrentStep(0);
+    setIsPlaying(false);
+  };
+  const handleNext = () => {
+    if (currentStep < visualizationData.steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
+  };
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-    const currentStateData = states[currentState];
+  const renderArrayElement = (value, index, step) => {
+    let elementClass = 'viz-element viz-element-default';
+    
+    if (step.sortedIndices.includes(index)) {
+      elementClass = 'viz-element viz-element-sorted';
+    } else if (step.activeIndices.includes(index)) {
+      elementClass = 'viz-element viz-element-active';
+    } else if (step.comparingIndices.includes(index)) {
+      elementClass = 'viz-element viz-element-comparing';
+    } else if (step.highlightedIndices.includes(index)) {
+      elementClass = 'viz-element viz-element-highlight';
+    }
 
     return (
-        <ErrorBoundary>
-            <div className="visualization-container p-4">
-                <div className="mb-4">
-                    <h2 className="text-xl font-bold mb-2">{parsedData.metaphor.name}</h2>
-                    <p className="text-gray-600">{parsedData.metaphor.description}</p>
-                </div>
-
-                <VisualizationContainer
-                    states={states}
-                    currentState={currentState}
-                    metaphor={parsedData.metaphor}
-                />
-
-                <div className="mt-4 p-4 bg-gray-50 rounded">
-                    <p className="mb-2 font-medium">{currentStateData.description}</p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p>Comparisons: {currentStateData.metrics.comparisons}</p>
-                            <p>Array Accesses: {currentStateData.metrics.arrayAccesses}</p>
-                        </div>
-                        <div>
-                            <p>Time: {currentStateData.metrics.efficiency.timeComplexity}</p>
-                            <p>Space: {currentStateData.metrics.efficiency.spaceComplexity}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <VisualizationControls
-                    isPlaying={isPlaying}
-                    onPlay={handlePlay}
-                    onReset={handleReset}
-                    onStepForward={handleStepForward}
-                    onStepBack={handleStepBack}
-                    onSpeedChange={handleSpeedChange}
-                    playbackSpeed={playbackSpeed}
-                    currentStep={currentState + 1}
-                    totalSteps={states.length}
-                />
-            </div>
-        </ErrorBoundary>
+      <div
+        key={index}
+        className={elementClass}
+        style={{ animationDelay: `${index * 0.1}s` }}
+      >
+        {value}
+      </div>
     );
+  };
+
+  if (error) {
+    return (
+      <Alert variant="error" title="Visualization Error">
+        {error}
+      </Alert>
+    );
+  }
+
+  if (!visualizationData) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="loading-spinner-lg" />
+        <span className="ml-4">Preparing visualization...</span>
+      </div>
+    );
+  }
+
+  const currentStepData = visualizationData.steps[currentStep];
+  const progress = ((currentStep + 1) / visualizationData.steps.length) * 100;
+
+  return (
+    <div className="viz-metaphor-container">
+      {/* Header */}
+      <div className="mb-6">
+        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+          {visualizationData.metaphor.name}
+        </h3>
+        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          {visualizationData.metaphor.description}
+        </p>
+      </div>
+
+      {/* Progress and Controls */}
+      <Card className="mb-4">
+        <Card.Body>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="font-semibold">{currentStepData.title}</h4>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                Step {currentStep + 1} of {visualizationData.steps.length}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>Speed:</span>
+              <select
+                value={playSpeed}
+                onChange={(e) => setPlaySpeed(Number(e.target.value))}
+                className="input text-xs p-1"
+                style={{ width: '80px' }}
+              >
+                <option value={2000}>0.5x</option>
+                <option value={1000}>1x</option>
+                <option value={500}>2x</option>
+                <option value={250}>4x</option>
+              </select>
+            </div>
+          </div>
+
+          <ProgressBar
+            value={currentStep + 1}
+            max={visualizationData.steps.length}
+            showPercentage={true}
+            className="mb-4"
+          />
+
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevious}
+              disabled={currentStep === 0}
+            >
+              ⏮ Previous
+            </Button>
+            
+            <Button
+              variant={isPlaying ? 'secondary' : 'primary'}
+              size="sm"
+              onClick={handlePlay}
+              disabled={currentStep >= visualizationData.steps.length - 1}
+            >
+              {isPlaying ? '⏸ Pause' : '▶ Play'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNext}
+              disabled={currentStep >= visualizationData.steps.length - 1}
+            >
+              Next ⏭
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+            >
+              🔄 Reset
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Visualization Area */}
+      <Card>
+        <Card.Body>
+          {/* Array Visualization */}
+          <div className="viz-array-container">
+            {currentStepData.array.map((value, index) => 
+              renderArrayElement(value, index, currentStepData)
+            )}
+          </div>
+
+          {/* Step Description */}
+          <div className="viz-step-description">
+            <h4 className="font-medium mb-2">What's Happening?</h4>
+            <p className="mb-2">{currentStepData.description}</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <strong>Metaphor:</strong> {currentStepData.metaphorDescription}
+            </p>
+          </div>
+
+          {/* Complexity Information */}
+          <div className="flex items-center justify-between mt-4 p-4 rounded-lg" 
+               style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+            <div className="flex items-center gap-4">
+              <div>
+                <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                  Time Complexity:
+                </span>
+                <div className={`viz-complexity-indicator ${getComplexityColor(currentStepData.complexity.timeComplexity)}`}>
+                  {currentStepData.complexity.timeComplexity}
+                </div>
+              </div>
+              
+              <div>
+                <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                  Space Complexity:
+                </span>
+                <div className={`viz-complexity-indicator ${getComplexityColor(currentStepData.complexity.spaceComplexity)}`}>
+                  {currentStepData.complexity.spaceComplexity}
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                Current Operation:
+              </span>
+              <p className="text-sm font-medium">{currentStepData.complexity.currentOperation}</p>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
+            <h5 className="text-sm font-medium mb-2">Element States:</h5>
+            <div className="flex flex-wrap gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="viz-element viz-element-default" style={{ width: '20px', height: '20px', fontSize: '10px' }}>
+                  ?
+                </div>
+                <span>Default</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="viz-element viz-element-active" style={{ width: '20px', height: '20px', fontSize: '10px' }}>
+                  A
+                </div>
+                <span>Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="viz-element viz-element-comparing" style={{ width: '20px', height: '20px', fontSize: '10px' }}>
+                  C
+                </div>
+                <span>Comparing</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="viz-element viz-element-sorted" style={{ width: '20px', height: '20px', fontSize: '10px' }}>
+                  ✓
+                </div>
+                <span>Sorted</span>
+              </div>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+    </div>
+  );
 };
 
 export default AlgorithmVisualization; 

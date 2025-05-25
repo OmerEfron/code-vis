@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import CodeInput from './CodeInput';
 import MetaphorSelector from './MetaphorSelector';
+import { Alert, Button, Card, ProgressBar } from './ui';
 import { analyzeCode, getExamples } from '../api/axios';
+import { useVisualization } from '../hooks/useVisualization';
 
 // Dynamically import AlgorithmVisualization with SSR disabled
 const AlgorithmVisualization = dynamic(
@@ -12,136 +14,35 @@ const AlgorithmVisualization = dynamic(
     { ssr: false }
 );
 
-const generateVisualizationStates = (algorithm, metaphor) => {
-    if (!algorithm || !metaphor) return [];
-
-    // Extract metaphor properties
-    const {
-        steps,
-        elements,
-        visualProperties
-    } = metaphor;
-
-    // Initialize visualization states array
-    const states = [];
-
-    // Create initial state
-    states.push({
-        papers: Object.keys(elements).map((element, index) => ({
-            score: element,
-            position: { x: null, y: null },
-            highlighted: false,
-            description: elements[element]
-        })),
-        description: steps[0],
-        complexity: {
-            comparisons: 0,
-            arrayAccesses: 0,
-            currentMemoryUsage: { 
-                main: Object.keys(elements).length,
-                auxiliary: 2,
-                total: Object.keys(elements).length + 5
-            }
-        },
-        visualElements: {
-            piles: [{
-                papers: Object.keys(elements).map(element => ({
-                    score: element,
-                    position: { x: null, y: null },
-                    description: elements[element]
-                }))
-            }],
-            comparisons: []
-        }
-    });
-
-    // Generate states for each step in the metaphor
-    steps.slice(1).forEach((step, stepIndex) => {
-        const currentElements = Object.keys(elements);
-        const primaryElements = visualProperties.primaryElements || [];
-        
-        states.push({
-            papers: currentElements.map((element, index) => ({
-                score: element,
-                position: { x: null, y: null },
-                highlighted: primaryElements.includes(element),
-                description: elements[element]
-            })),
-            description: step,
-            complexity: {
-                comparisons: stepIndex + 1,
-                arrayAccesses: stepIndex + 1,
-                currentMemoryUsage: {
-                    main: currentElements.length,
-                    auxiliary: 2,
-                    total: currentElements.length + 5
-                }
-            },
-            visualElements: {
-                piles: [{
-                    papers: currentElements
-                        .filter(element => primaryElements.includes(element))
-                        .map(element => ({
-                            score: element,
-                            position: { x: null, y: null },
-                            description: elements[element]
-                        }))
-                }],
-                comparisons: primaryElements.length > 1 ? [{
-                    from: { value: primaryElements[0] },
-                    to: { value: primaryElements[1] }
-                }] : []
-            }
-        });
-    });
-
-    // Add final state
-    states.push({
-        papers: Object.keys(elements).map((element, index) => ({
-            score: element,
-            position: { x: null, y: null },
-            highlighted: visualProperties.primaryElements?.includes(element),
-            description: elements[element]
-        })),
-        description: "Visualization complete",
-        complexity: {
-            comparisons: steps.length - 1,
-            arrayAccesses: steps.length - 1,
-            currentMemoryUsage: {
-                main: Object.keys(elements).length,
-                auxiliary: 2,
-                total: Object.keys(elements).length + 5
-            }
-        },
-        visualElements: {
-            piles: [{
-                papers: Object.keys(elements)
-                    .filter(element => visualProperties.primaryElements?.includes(element))
-                    .map(element => ({
-                        score: element,
-                        position: { x: null, y: null },
-                        description: elements[element]
-                    }))
-            }],
-            comparisons: []
-        }
-    });
-
-    return states;
-};
-
 export default function CodeAnalyzer() {
     const [code, setCode] = useState('');
     const [analysis, setAnalysis] = useState(null);
     const [selectedMetaphor, setSelectedMetaphor] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState(null);
-    const [visualizationStates, setVisualizationStates] = useState([]);
     const [examples, setExamples] = useState([]);
     const [selectedExample, setSelectedExample] = useState(null);
 
+    // Use the visualization hook
+    const {
+        loading: visualizing,
+        error: visualizationError,
+        visualization,
+        currentStep,
+        totalSteps,
+        hasNext,
+        hasPrevious,
+        progress,
+        generateVisualization,
+        getScenarios,
+        nextStep,
+        previousStep,
+        goToStep,
+        reset: resetVisualization,
+        clearVisualization
+    } = useVisualization();
+
     useEffect(() => {
-        // Fetch examples when component mounts
         fetchExamples();
     }, []);
 
@@ -154,7 +55,7 @@ export default function CodeAnalyzer() {
         } catch (error) {
             console.error('Error fetching examples:', error);
             setError(error.message);
-            setExamples([]); // Set empty array on error
+            setExamples([]);
         }
     };
 
@@ -163,12 +64,15 @@ export default function CodeAnalyzer() {
         setCode('');
         setAnalysis(example.analysis);
         setSelectedMetaphor(example.analysis.metaphors?.[0] || null);
+        setError(null);
+        clearVisualization();
     };
 
     const handleAnalyzeCode = async () => {
         try {
             setIsAnalyzing(true);
             setError(null);
+            clearVisualization();
             
             const data = await analyzeCode(code);
             if (!data.success) {
@@ -196,6 +100,7 @@ export default function CodeAnalyzer() {
                 setAnalysis(example.analysis);
                 setSelectedMetaphor(example.analysis.metaphors[0]);
                 setError(null);
+                clearVisualization();
             }
         } catch (error) {
             console.error('Error loading example:', error);
@@ -206,179 +111,312 @@ export default function CodeAnalyzer() {
         }
     };
 
-    const handleMetaphorSelect = (metaphor) => {
+    const handleMetaphorSelect = async (metaphor) => {
         setSelectedMetaphor(metaphor);
-        // Generate visualization states when metaphor is selected
-        const states = generateVisualizationStates(analysis?.algorithm, metaphor);
-        setVisualizationStates(states);
+        
+        if (code && code.trim()) {
+            try {
+                await generateVisualization(code, 'sorting');
+            } catch (error) {
+                console.error('Visualization generation error:', error);
+            }
+        }
     };
 
     const renderExamples = () => (
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-indigo-100">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Example Visualizations</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {examples.map((example) => (
-                    <div
-                        key={example.id}
-                        className={`p-5 rounded-xl cursor-pointer transition-all transform hover:scale-102 hover:shadow-md ${
-                            selectedExample?.id === example.id
-                                ? 'bg-indigo-100 border-2 border-indigo-500 shadow-md'
-                                : 'bg-gray-50 hover:bg-indigo-50 border-2 border-transparent'
-                        }`}
-                        onClick={() => handleExampleSelect(example)}
-                    >
-                        <div className="font-semibold text-gray-900">{example.metadata.algorithmType}</div>
-                        <div className="text-sm text-gray-700 mt-2 flex items-center gap-2">
-                            <span>Time: {example.metadata.complexity.time}</span>
-                            <span className="text-gray-400">|</span>
-                            <span>Space: {example.metadata.complexity.space}</span>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-3 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {new Date(example.metadata.savedAt).toLocaleDateString()}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <Card className="mb-6">
+            <Card.Header>
+                <Card.Title>Example Visualizations</Card.Title>
+                <Card.Subtitle>Explore pre-built algorithm demonstrations</Card.Subtitle>
+            </Card.Header>
+            <Card.Body>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {examples.map((example) => (
+                        <Card
+                            key={example.id}
+                            className="cursor-pointer transition-all hover:shadow-lg"
+                            style={{
+                                transform: selectedExample?.id === example.id ? 'translateY(-2px)' : 'none',
+                                borderColor: selectedExample?.id === example.id ? 'var(--color-primary-500)' : undefined,
+                                backgroundColor: selectedExample?.id === example.id ? 'var(--color-primary-50)' : undefined
+                            }}
+                            onClick={() => handleExampleSelect(example)}
+                        >
+                            <Card.Body>
+                                <Card.Title as="h4" className="mb-2">
+                                    {example.metadata.algorithmType}
+                                </Card.Title>
+                                <div className="text-sm mb-3 flex items-center gap-2">
+                                    <span style={{ color: 'var(--color-text-secondary)' }}>
+                                        Time: {example.metadata.complexity.time}
+                                    </span>
+                                    <span style={{ color: 'var(--color-text-tertiary)' }}>|</span>
+                                    <span style={{ color: 'var(--color-text-secondary)' }}>
+                                        Space: {example.metadata.complexity.space}
+                                    </span>
+                                </div>
+                                <div className="text-xs flex items-center" style={{ color: 'var(--color-text-tertiary)' }}>
+                                    <span>📅</span>
+                                    <span className="ml-1">
+                                        {new Date(example.metadata.savedAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    ))}
+                </div>
+            </Card.Body>
+        </Card>
     );
 
     const renderError = () => error && (
-        <div className="p-6 bg-red-50 text-red-700 rounded-xl border border-red-200">
-            <div className="flex items-center gap-3 mb-2">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-semibold">Error</h3>
-            </div>
-            <p className="ml-9">{error}</p>
+        <Alert 
+            variant="error" 
+            title="Error" 
+            className="mb-6"
+            onClose={() => setError(null)}
+        >
+            <p>{error}</p>
             {error.includes('Backend server not accessible') && (
-                <div className="ml-9 mt-2 text-sm">
+                <div className="mt-2 text-sm">
                     <p>Please check:</p>
                     <ul className="list-disc ml-5 mt-1">
                         <li>The backend server is running on port 3000</li>
                         <li>There are no CORS issues</li>
-                        <li>The NEXT_PUBLIC_BACKEND_URL environment variable is set correctly (if using custom URL)</li>
+                        <li>The NEXT_PUBLIC_BACKEND_URL environment variable is set correctly</li>
                     </ul>
                 </div>
             )}
-        </div>
+        </Alert>
+    );
+
+    const renderVisualizationError = () => visualizationError && (
+        <Alert 
+            variant="error" 
+            title="Visualization Error" 
+            className="mb-4"
+            onClose={() => clearVisualization()}
+        >
+            {visualizationError}
+        </Alert>
+    );
+
+    const renderAlgorithmAnalysis = () => analysis && (
+        <Card className="mb-6">
+            <Card.Header>
+                <Card.Title>Algorithm Analysis</Card.Title>
+                <Card.Subtitle>Detailed analysis of your code</Card.Subtitle>
+            </Card.Header>
+            <Card.Body>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                            Algorithm Type
+                        </p>
+                        <p style={{ color: 'var(--color-text-primary)' }}>
+                            {analysis?.algorithm?.algorithmType || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                            Category
+                        </p>
+                        <p style={{ color: 'var(--color-text-primary)' }}>
+                            {analysis?.algorithm?.category || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                            Time Complexity
+                        </p>
+                        <p style={{ color: 'var(--color-text-primary)' }}>
+                            {analysis?.algorithm?.timeComplexity || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                            Space Complexity
+                        </p>
+                        <p style={{ color: 'var(--color-text-primary)' }}>
+                            {analysis?.algorithm?.spaceComplexity || 'N/A'}
+                        </p>
+                    </div>
+                </div>
+                
+                <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+                    <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                        Explanation
+                    </p>
+                    <p style={{ color: 'var(--color-text-primary)', lineHeight: 'var(--leading-relaxed)' }}>
+                        {analysis?.algorithm?.explanation || 'No explanation available.'}
+                    </p>
+                </div>
+            </Card.Body>
+        </Card>
+    );
+
+    const renderVisualizationControls = () => visualization && (
+        <Card className="mb-6">
+            <Card.Header>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <Card.Title>Visualization Controls</Card.Title>
+                        <Card.Subtitle>Step through the algorithm execution</Card.Subtitle>
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        Step {currentStep + 1} of {totalSteps}
+                    </div>
+                </div>
+            </Card.Header>
+            <Card.Body>
+                <div className="mb-4">
+                    <ProgressBar
+                        value={currentStep + 1}
+                        max={totalSteps}
+                        label="Progress"
+                        showPercentage={true}
+                    />
+                </div>
+                
+                <div className="flex items-center justify-center gap-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasPrevious}
+                        onClick={previousStep}
+                    >
+                        ← Previous
+                    </Button>
+                    
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={resetVisualization}
+                    >
+                        Reset
+                    </Button>
+                    
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasNext}
+                        onClick={nextStep}
+                    >
+                        Next →
+                    </Button>
+                </div>
+            </Card.Body>
+        </Card>
     );
 
     return (
-        <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
+        <div className="container mx-auto min-h-screen" style={{ 
+            backgroundColor: 'var(--color-background)', 
+            padding: 'var(--space-6)' 
+        }}>
             {renderError()}
             {renderExamples()}
-            <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Code Analyzer
+            
+            <div className="flex flex-col gap-6">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-5xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+                        🎯 CodeViz2 Algorithm Explorer
                     </h1>
-                    <button
-                        onClick={loadExample}
-                        className="px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-all shadow-sm border border-gray-200 hover:border-gray-300 flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Load Example
-                    </button>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="relative">
-                        <textarea
-                            value={code || ''}
-                            onChange={(e) => setCode(e.target.value || '')}
-                            placeholder="Enter your code here..."
-                            className="w-full h-72 p-5 bg-white rounded-xl border border-gray-200 font-mono text-sm text-gray-800 placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
-                        />
-                        <div className="absolute bottom-4 right-4">
-                            <button
-                                onClick={handleAnalyzeCode}
-                                disabled={isAnalyzing || !(code || '').trim()}
-                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center gap-2"
-                            >
-                                {isAnalyzing ? (
-                                    <>
-                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        Analyzing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                        </svg>
-                                        Analyze Code
-                                    </>
-                                )}
-                            </button>
+                    <p className="text-xl mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+                        Transform your code into beautiful, interactive visualizations with real-world metaphors
+                    </p>
+                    <div className="flex justify-center items-center gap-6">
+                        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-success-500)' }}></span>
+                            <span>AI-Powered Analysis</span>
                         </div>
+                        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-primary-500)' }}></span>
+                            <span>Interactive Learning</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-secondary-500)' }}></span>
+                            <span>Real-World Metaphors</span>
+                        </div>
+                    </div>
+                    <div className="mt-6">
+                        <Button
+                            variant="outline"
+                            onClick={loadExample}
+                            className="flex items-center gap-2"
+                        >
+                            <span>🚀</span>
+                            Try Example Algorithm
+                        </Button>
                     </div>
                 </div>
 
-                {analysis && (
-                    <div className="space-y-8">
-                        {/* Algorithm Analysis */}
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Algorithm Analysis</h2>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p className="text-sm font-medium text-gray-700">Type</p>
-                                    <p className="mt-2 text-gray-900">{analysis?.algorithm?.algorithmType || 'N/A'}</p>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p className="text-sm font-medium text-gray-700">Category</p>
-                                    <p className="mt-2 text-gray-900">{analysis?.algorithm?.category || 'N/A'}</p>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p className="text-sm font-medium text-gray-700">Time Complexity</p>
-                                    <p className="mt-2 text-gray-900">{analysis?.algorithm?.timeComplexity || 'N/A'}</p>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p className="text-sm font-medium text-gray-700">Space Complexity</p>
-                                    <p className="mt-2 text-gray-900">{analysis?.algorithm?.spaceComplexity || 'N/A'}</p>
-                                </div>
-                            </div>
-                            <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                <p className="text-sm font-medium text-gray-700">Explanation</p>
-                                <p className="mt-2 text-gray-900 leading-relaxed">{analysis?.algorithm?.explanation || 'No explanation available.'}</p>
-                            </div>
+                {/* Code Input */}
+                <Card>
+                    <Card.Header>
+                        <Card.Title>🔬 Algorithm Code Analysis</Card.Title>
+                        <Card.Subtitle>Paste your algorithm and watch the magic happen! Our AI will identify patterns and create engaging visualizations.</Card.Subtitle>
+                    </Card.Header>
+                    <Card.Body>
+                        <CodeInput
+                            value={code}
+                            onChange={setCode}
+                            isLoading={isAnalyzing}
+                            error={error}
+                        />
+                        
+                        <div className="flex justify-end mt-4">
+                            <Button
+                                onClick={handleAnalyzeCode}
+                                disabled={isAnalyzing || !code.trim()}
+                                loading={isAnalyzing}
+                                size="lg"
+                                className="px-8"
+                            >
+                                {isAnalyzing ? '🔍 Analyzing Your Code...' : '✨ Create Visualization'}
+                            </Button>
                         </div>
+                    </Card.Body>
+                </Card>
 
-                        {/* Metaphor Selection */}
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Choose a Metaphor</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {(analysis?.metaphors || []).map((metaphor) => (
-                                    <button
-                                        key={metaphor?.name || Math.random()}
-                                        onClick={() => setSelectedMetaphor(metaphor)}
-                                        className={`p-5 rounded-xl transition-all transform hover:scale-102 text-left ${
-                                            selectedMetaphor?.name === metaphor?.name
-                                                ? 'bg-blue-50 border-2 border-blue-500'
-                                                : 'bg-gray-50 border-2 border-transparent hover:border-blue-200'
-                                        }`}
-                                    >
-                                        <h3 className="font-semibold text-gray-900">{metaphor?.name || 'Unnamed Metaphor'}</h3>
-                                        <p className="text-sm text-gray-700 mt-2">{metaphor?.description || 'No description available.'}</p>
-                                        <span className="inline-block px-3 py-1 bg-white text-gray-700 text-xs font-medium rounded-full mt-3 shadow-sm border border-gray-200">
-                                            {metaphor?.learningStyle || 'General'}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                {/* Algorithm Analysis */}
+                {renderAlgorithmAnalysis()}
 
-                        {/* Visualization */}
-                        {selectedMetaphor && (
-                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Visualization</h2>
+                {/* Metaphor Selection */}
+                {analysis?.metaphors && (
+                    <Card>
+                        <Card.Header>
+                            <Card.Title>Metaphor Selection</Card.Title>
+                            <Card.Subtitle>Choose how you'd like to visualize the algorithm</Card.Subtitle>
+                        </Card.Header>
+                        <Card.Body>
+                            <MetaphorSelector
+                                metaphors={analysis.metaphors}
+                                onSelect={handleMetaphorSelect}
+                                selected={selectedMetaphor}
+                            />
+                        </Card.Body>
+                    </Card>
+                )}
+
+                {/* Visualization Error */}
+                {renderVisualizationError()}
+
+                {/* Visualization Controls */}
+                {renderVisualizationControls()}
+
+                {/* Visualization Display */}
+                {selectedMetaphor && visualization && (
+                    <Card>
+                        <Card.Header>
+                            <Card.Title>Interactive Visualization</Card.Title>
+                            <Card.Subtitle>
+                                {selectedMetaphor.name} - {selectedMetaphor.description}
+                            </Card.Subtitle>
+                        </Card.Header>
+                        <Card.Body>
+                            <div className="canvas-container">
                                 <AlgorithmVisualization
                                     data={{
                                         success: true,
@@ -390,8 +428,24 @@ export default function CodeAnalyzer() {
                                     }}
                                 />
                             </div>
-                        )}
-                    </div>
+                        </Card.Body>
+                    </Card>
+                )}
+
+                {/* Loading state for visualization */}
+                {visualizing && selectedMetaphor && (
+                    <Card>
+                        <Card.Body>
+                            <div className="flex items-center justify-center p-8">
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="loading-spinner-lg" />
+                                    <p style={{ color: 'var(--color-text-secondary)' }}>
+                                        Generating visualization...
+                                    </p>
+                                </div>
+                            </div>
+                        </Card.Body>
+                    </Card>
                 )}
             </div>
         </div>
