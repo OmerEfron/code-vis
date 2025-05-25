@@ -1,14 +1,50 @@
 const CParser = require('../parsers/cParser');
 const { Algorithm, MergeSortAlgorithm } = require('../models/Algorithm');
 
+// Response formatter for consistent API responses
+const ResponseFormatter = {
+    success: (data, meta = {}) => ({
+        success: true,
+        data,
+        meta: {
+            timestamp: new Date().toISOString(),
+            ...meta
+        }
+    }),
+    error: (message, details = null) => ({
+        success: false,
+        error: message,
+        details,
+        meta: {
+            timestamp: new Date().toISOString()
+        }
+    })
+};
+
 // Factory to create the appropriate algorithm instance
-const createAlgorithm = (type, code) => {
+const createAlgorithm = (type, code, data = null) => {
     switch (type.toLowerCase()) {
         case 'mergesort':
-            return new MergeSortAlgorithm('mergeSort', code);
-        // Add more algorithm types here
+            const algorithm = new MergeSortAlgorithm('mergeSort', code);
+            if (data && Array.isArray(data)) {
+                // Override the parsed data if explicitly provided
+                algorithm.data = data;
+            }
+            return algorithm;
+        case 'bubblesort':
+            // Future implementation
+            throw new Error('Bubble Sort visualization not yet implemented');
+        case 'quicksort':
+            // Future implementation
+            throw new Error('Quick Sort visualization not yet implemented');
+        case 'linearsearch':
+            // Future implementation
+            throw new Error('Linear Search visualization not yet implemented');
+        case 'binarysearch':
+            // Future implementation
+            throw new Error('Binary Search visualization not yet implemented');
         default:
-            throw new Error(`Unsupported algorithm type: ${type}`);
+            throw new Error(`Unsupported algorithm type: ${type}. Supported types: mergeSort`);
     }
 };
 

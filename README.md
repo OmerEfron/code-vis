@@ -51,10 +51,23 @@ npm install
 ```
 
 3. Set up environment variables:
+
+**Backend Configuration:**
 ```bash
 # In backend directory
 cp .env.example .env
-# Edit .env and add your OpenAI API key
+# Edit .env and add your configuration:
+# - OPENAI_API_KEY: Your OpenAI API key (required)
+# - PORT: Backend server port (default: 3000)
+# - FRONTEND_URL: Frontend URL for CORS (default: http://localhost:3001)
+```
+
+**Frontend Configuration:**
+```bash
+# In frontend directory
+cp .env.example .env.local
+# Edit .env.local and add your configuration:
+# - NEXT_PUBLIC_BACKEND_URL: Backend API URL (default: http://localhost:3000)
 ```
 
 4. Start the development servers:

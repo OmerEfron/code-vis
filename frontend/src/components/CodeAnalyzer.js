@@ -160,9 +160,9 @@ export default function CodeAnalyzer() {
 
     const handleExampleSelect = async (example) => {
         setSelectedExample(example);
-        setCode(example?.analysis?.code || '');
-        setAnalysis(example);
-        setSelectedMetaphor(example?.analysis?.metaphors?.[0] || null);
+        setCode('');
+        setAnalysis(example.analysis);
+        setSelectedMetaphor(example.analysis.metaphors?.[0] || null);
     };
 
     const handleAnalyzeCode = async () => {
@@ -381,9 +381,12 @@ export default function CodeAnalyzer() {
                                 <h2 className="text-2xl font-semibold text-gray-900 mb-6">Visualization</h2>
                                 <AlgorithmVisualization
                                     data={{
-                                        metaphors: [selectedMetaphor],
-                                        inputs: analysis?.inputs || [],
-                                        algorithm: analysis?.algorithm || {}
+                                        success: true,
+                                        analysis: {
+                                            metaphors: [selectedMetaphor],
+                                            inputs: analysis?.inputs || { inputs: [], examples: [] },
+                                            algorithm: analysis?.algorithm || {}
+                                        }
                                     }}
                                 />
                             </div>

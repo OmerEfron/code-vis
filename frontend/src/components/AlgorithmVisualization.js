@@ -140,7 +140,20 @@ const AlgorithmVisualization = ({ data }) => {
     }) => {
         const { visualProperties } = metaphor;
         
+        // Create elements array for visualization
+        const elements = array.map((value, index) => ({
+            id: `element-${index}`,
+            value,
+            index,
+            current: index === currentIndex,
+            isTarget: value === target,
+            checked: index < left || index > right,
+            highlighted: index >= left && index <= right,
+            position: { x: index * 120 + 50, y: 200 }
+        }));
+        
         return {
+            elements, // Add elements array
             array,
             target,
             currentIndex,
@@ -156,6 +169,9 @@ const AlgorithmVisualization = ({ data }) => {
                 },
                 comparisons,
                 arrayAccesses,
+                checked: comparisons,
+                progress: ((comparisons / array.length) * 100),
+                target,
                 currentMemoryUsage: {
                     main: array.length,
                     auxiliary: 3,
@@ -245,7 +261,8 @@ const AlgorithmVisualization = ({ data }) => {
                 </div>
 
                 <VisualizationContainer
-                    state={currentStateData}
+                    states={states}
+                    currentState={currentState}
                     metaphor={parsedData.metaphor}
                 />
 
