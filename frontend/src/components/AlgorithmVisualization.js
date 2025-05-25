@@ -41,8 +41,34 @@ const AlgorithmVisualization = ({ data }) => {
       const elements = metaphor.elements || {};
       const metaphorSteps = metaphor.steps || [];
       
-      // Create example data array for demonstration
-      const exampleArray = [64, 34, 25, 12, 22, 11, 90];
+      // Get data from the analysis examples or use default
+      let exampleArray = [64, 34, 25, 12, 22, 11, 90]; // default fallback
+      
+      // Try to extract array data from the examples
+      if (data?.analysis?.inputs?.examples?.length > 0) {
+        const firstExample = data.analysis.inputs.examples[0];
+        if (firstExample.input) {
+          // For array-based algorithms (sorting, searching)
+          if (firstExample.input.array || firstExample.input.a) {
+            exampleArray = firstExample.input.array || firstExample.input.a;
+          }
+          // For other algorithm types, we might need to create a visual representation
+          else {
+            // Convert other input types to visualizable data
+            const inputValues = Object.values(firstExample.input);
+            if (inputValues.length > 0) {
+              // For string algorithms, we might show character codes or lengths
+              if (typeof inputValues[0] === 'string') {
+                exampleArray = inputValues[0].split('').map((char, idx) => char.charCodeAt(0));
+              }
+              // For single values, create a simple demonstration array
+              else if (typeof inputValues[0] === 'number') {
+                exampleArray = [inputValues[0], inputValues[0] * 2, inputValues[0] + 5, inputValues[0] - 1];
+              }
+            }
+          }
+        }
+      }
       
       // Initial state
       steps.push({

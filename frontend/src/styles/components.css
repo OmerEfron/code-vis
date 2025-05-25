@@ -668,4 +668,79 @@
   .card {
     border-width: 2px;
   }
+}
+
+/* ========================================
+   TEXT CONTRAST UTILITIES
+   ======================================== */
+
+.text-contrast-high {
+  color: var(--color-neutral-900) !important;
+}
+
+.text-contrast-medium {
+  color: var(--color-neutral-700) !important;
+}
+
+.text-contrast-accessible {
+  color: var(--color-neutral-800) !important;
+}
+
+/* Background-specific text colors for optimal contrast */
+.bg-light .text-auto {
+  color: var(--color-neutral-900);
+}
+
+.bg-dark .text-auto {
+  color: var(--color-neutral-50);
+}
+
+/* Enhanced visualization text classes */
+.viz-text-primary-enhanced {
+  color: var(--color-neutral-900);
+  font-weight: var(--font-medium);
+}
+
+.viz-text-secondary-enhanced {
+  color: var(--color-neutral-700);
+  font-weight: var(--font-medium);
+}
+
+/* ========================================
+   ENHANCED VISUALIZATION ELEMENTS
+   ======================================== */
+
+.viz-element-enhanced {
+  color: var(--color-neutral-900);
+  font-weight: var(--font-semibold);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.viz-element-default-enhanced {
+  background-color: var(--viz-element-default);
+  color: var(--color-neutral-900);
+  border-color: var(--color-neutral-400);
+  font-weight: var(--font-semibold);
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* Force readable text on light backgrounds */
+@supports (color-contrast: white vs black) {
+  .auto-contrast {
+    color: color-contrast(var(--background-color) vs var(--color-neutral-900), var(--color-neutral-50));
+  }
+}
+
+/* Fallback for browsers without color-contrast support */
+.auto-contrast {
+  color: var(--color-neutral-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  .auto-contrast {
+    color: var(--color-neutral-50);
+  }
 } 

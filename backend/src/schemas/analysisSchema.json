@@ -30,12 +30,12 @@
             "timeComplexity": {
               "type": "string",
               "description": "Big O notation for time complexity",
-              "pattern": "^O\\([\\w\\s+*()logn]+\\)$"
+              "pattern": "^O\\([\\w\\s+*()²³⁴⁵⁶⁷⁸⁹^0-9!./,-]+\\)$"
             },
             "spaceComplexity": {
               "type": "string",
               "description": "Big O notation for space complexity",
-              "pattern": "^O\\([\\w\\s+*()logn]+\\)$"
+              "pattern": "^O\\([\\w\\s+*()²³⁴⁵⁶⁷⁸⁹^0-9!./,-]+\\)$"
             },
             "confidence": {
               "type": "number",
@@ -84,24 +84,29 @@
                 "properties": {
                   "input": {
                     "type": "object",
-                    "required": ["a", "n", "x"],
-                    "properties": {
-                      "a": {
-                        "type": "array",
-                        "items": {
-                          "type": "number"
-                        }
-                      },
-                      "n": {
-                        "type": "number"
-                      },
-                      "x": {
-                        "type": "number"
-                      }
-                    }
+                    "description": "Input parameters for the algorithm - flexible structure based on algorithm requirements",
+                    "additionalProperties": true,
+                    "minProperties": 1
                   },
                   "expectedOutput": {
-                    "type": "string"
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array"
+                      },
+                      {
+                        "type": "object"
+                      }
+                    ],
+                    "description": "Expected output of the algorithm - can be any valid JSON type"
                   }
                 }
               }

@@ -121,17 +121,15 @@ export class VisualizationParser {
         input = this.safeEval(input);
       } catch (error) {
         console.error('Failed to parse example input:', error);
-        input = { a: [1, 2, 3, 4, 5], n: 5, x: 3 };
+        // Fallback to a default object structure
+        input = { value: input };
       }
     }
 
-    // Ensure input has required properties
+    // Return the input as-is since we now support flexible formats
+    // No need to force a specific structure like {a, n, x}
     return {
-      input: {
-        a: Array.isArray(input.a) ? input.a : [1, 2, 3, 4, 5],
-        n: typeof input.n === 'number' ? input.n : (input.a?.length || 5),
-        x: typeof input.x === 'number' ? input.x : 3
-      },
+      input: input || {},
       expectedOutput: example.expectedOutput
     };
   }
