@@ -48,40 +48,99 @@ const createAlgorithm = (type, code, data = null) => {
     }
 };
 
-const generateVisualization = async (code, scenario) => {
-    // Parse the code to detect algorithm type and structure
-    const parser = new CParser();
-    const parseResult = parser.parse(code);
+const generateVisualization = async (req, res) => {
+    try {
+        const { code, scenario = 'sorting', data = null } = req.body;
 
-    // Create appropriate algorithm instance
-    const algorithm = createAlgorithm(parseResult.type, code);
-    
-    // Initialize algorithm with parsed data
-    algorithm.initialize();
+        // Validate required inputs
+        if (!code || typeof code !== 'string') {
+            return res.status(400).json(
+                ResponseFormatter.error('Code is required and must be a string')
+            );
+        }
 
-    // Generate all visualization states
-    const states = algorithm.getAllStates(scenario);
+        if (code.trim().length === 0) {
+            return res.status(400).json(
+                ResponseFormatter.error('Code cannot be empty')
+            );
+        }
 
-    // Create the visualization object
-    return {
-        success: true,
-        algorithm: parseResult.type,
-        scenario: scenario,
-        metadata: {
-            totalSteps: states.length,
-            algorithmStructure: parseResult.structure
-        },
-        states: states.map((state, index) => ({
-            stepNumber: index + 1,
-            ...state,
-            canvasLayout: {
-                width: 800,
-                height: 600,
-                scale: 1,
-                origin: { x: 400, y: 300 }
+        // Parse the code to detect algorithm type and structure
+        const parser = new CParser();
+        const parseResult = parser.parse(code);
+
+        if (parseResult.type === 'unknown') {
+            return res.status(400).json(
+                ResponseFormatter.error(
+                    'Could not detect algorithm type from the provided code',
+                    { supportedTypes: ['mergeSort'] }
+                )
+            );
+        }
+
+        // Create appropriate algorithm instance
+        const algorithm = createAlgorithm(parseResult.type, code, data);
+        
+        // Initialize algorithm with parsed data
+        algorithm.initialize();
+
+        // Generate all visualization states
+        const states = algorithm.getAllStates(scenario);
+
+        // Create the visualization response
+        const visualizationData = {
+            algorithm: {
+                type: parseResult.type,
+                structure: parseResult.structure,
+                initialData: parseResult.data
+            },
+            scenario: scenario,
+            visualization: {
+                states: states.map((state, index) => ({
+                    stepNumber: index + 1,
+                    ...state,
+                    canvasLayout: {
+                        width: 800,
+                        height: 600,
+                        scale: 1,
+                        origin: { x: 400, y: 300 }
+                    }
+                })),
+                metadata: {
+                    totalSteps: states.length,
+                    complexity: {
+                        time: 'O(n log n)',
+                        space: 'O(n)'
+                    }
+                }
             }
-        }))
-    };
+        };
+
+        return res.json(
+            ResponseFormatter.success(visualizationData, {
+                algorithmType: parseResult.type,
+                totalSteps: states.length
+            })
+        );
+
+    } catch (error) {
+        console.error('Visualization generation error:', error);
+        
+        if (error.message.includes('not yet implemented')) {
+            return res.status(501).json(
+                ResponseFormatter.error(error.message, { 
+                    type: 'not_implemented' 
+                })
+            );
+        }
+
+        return res.status(500).json(
+            ResponseFormatter.error(
+                'Failed to generate visualization',
+                process.env.NODE_ENV === 'development' ? error.message : undefined
+            )
+        );
+    }
 };
 
 module.exports = {

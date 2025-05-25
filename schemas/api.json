@@ -1,0 +1,287 @@
+{
+  "analysisRequest": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 10000,
+        "description": "The algorithm code to analyze"
+      },
+      "scenario": {
+        "type": "string",
+        "enum": ["sorting", "searching", "graph", "dynamic_programming"],
+        "description": "The algorithm scenario/category"
+      },
+      "metaphor": {
+        "type": "string",
+        "enum": ["cooking", "construction", "nature", "teaching"],
+        "description": "The metaphor style for visualization"
+      }
+    },
+    "required": ["code"],
+    "additionalProperties": false
+  },
+  "analysisResponse": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the analysis was successful"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "object",
+            "properties": {
+              "algorithmType": {
+                "type": "string",
+                "description": "The detected algorithm type"
+              },
+              "category": {
+                "type": "string",
+                "description": "The algorithm category"
+              },
+              "timeComplexity": {
+                "type": "string",
+                "pattern": "^O\\([\\w\\s+*()logn]+\\)$",
+                "description": "Big O notation for time complexity"
+              },
+              "spaceComplexity": {
+                "type": "string",
+                "pattern": "^O\\([\\w\\s+*()logn]+\\)$",
+                "description": "Big O notation for space complexity"
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "explanation": {
+                "type": "string",
+                "description": "Detailed explanation of the algorithm"
+              }
+            },
+            "required": ["algorithmType", "category", "timeComplexity", "spaceComplexity", "explanation"]
+          },
+          "metaphors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "learningStyle": {
+                  "type": "string",
+                  "enum": ["visual", "auditory", "kinesthetic"]
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["name", "description", "learningStyle", "steps"]
+            }
+          }
+        },
+        "required": ["algorithm", "metaphors"]
+      },
+      "meta": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": ["success", "data", "meta"]
+  },
+  "visualizationRequest": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 10000,
+        "description": "The algorithm code to visualize"
+      },
+      "scenario": {
+        "type": "string",
+        "enum": ["sorting", "searching", "graph"],
+        "description": "The visualization scenario"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 20,
+        "description": "Optional custom data array to use instead of parsed data"
+      }
+    },
+    "required": ["code"],
+    "additionalProperties": false
+  },
+  "visualizationResponse": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "structure": {
+                "type": "object"
+              },
+              "initialData": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "required": ["type", "structure", "initialData"]
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "visualization": {
+            "type": "object",
+            "properties": {
+              "states": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "stepNumber": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "canvasLayout": {
+                      "type": "object",
+                      "properties": {
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        },
+                        "scale": {
+                          "type": "number"
+                        },
+                        "origin": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": ["stepNumber", "type", "description", "canvasLayout"]
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "totalSteps": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "complexity": {
+                    "type": "object",
+                    "properties": {
+                      "time": {
+                        "type": "string"
+                      },
+                      "space": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["states", "metadata"]
+          }
+        },
+        "required": ["algorithm", "scenario", "visualization"]
+      },
+      "meta": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "algorithmType": {
+            "type": "string"
+          },
+          "totalSteps": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "required": ["success", "data", "meta"]
+  },
+  "errorResponse": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "const": false
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message"
+      },
+      "details": {
+        "description": "Additional error details"
+      },
+      "meta": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusCode": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "required": ["success", "error", "meta"]
+  }
+} 

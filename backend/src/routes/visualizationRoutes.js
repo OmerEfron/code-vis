@@ -1,32 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { generateVisualization } = require('../controllers/visualizationController');
+const { 
+    validateVisualizationRequest, 
+    sanitizeCode, 
+    visualizationLimiter 
+} = require('../middleware/validation');
 
 // Endpoint to generate visualization states
-router.post('/generate', async (req, res) => {
-    try {
-        const { code, scenario } = req.body;
-
-        // Validate input
-        if (!code || !scenario) {
-            return res.status(400).json({
-                success: false,
-                error: 'Both code and scenario are required'
-            });
-        }
-
-        // Generate visualization
-        const visualization = await generateVisualization(code, scenario);
-        res.json(visualization);
-
-    } catch (error) {
-        console.error('Visualization generation error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
+router.post('/generate', 
+    visualizationLimiter,
+    sanitizeCode,
+    validateVisualizationRequest,
+    generateVisualization
+);
 
 // Get available scenarios
 router.get('/scenarios', (req, res) => {

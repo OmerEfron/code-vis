@@ -12,7 +12,7 @@ const config = {
     ANALYTICS_ID: process.env.NEXT_PUBLIC_ANALYTICS_ID,
     
     // API Settings
-    API_TIMEOUT: 30000, // 30 seconds
+    API_TIMEOUT: 300000, // 300 seconds
     
     // Feature flags (can be controlled via environment variables)
     FEATURES: {
