@@ -1,166 +1,89 @@
-@import "tailwindcss";
-@import "../styles/design-tokens.css";
-@import "../styles/components.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Reset and base styles */
-* {
-  box-sizing: border-box;
+@import '../styles/design-tokens.css';
+@import '../styles/components.css';
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
-html {
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--color-background);
   color: var(--color-text-primary);
+  background: var(--color-background);
   font-family: var(--font-sans);
-  font-size: var(--text-base);
   line-height: var(--leading-normal);
-  transition: background-color var(--transition-default), color var(--transition-default);
 }
 
-/* Typography base styles */
+/* Base styles */
 h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-weight: var(--font-semibold);
-  line-height: var(--leading-tight);
   color: var(--color-text-primary);
-}
-
-h1 {
-  font-size: var(--text-4xl);
   font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
 }
 
-h2 {
-  font-size: var(--text-3xl);
-}
-
-h3 {
-  font-size: var(--text-2xl);
-}
-
-h4 {
-  font-size: var(--text-xl);
-}
-
-h5 {
-  font-size: var(--text-lg);
-}
-
-h6 {
-  font-size: var(--text-base);
-}
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
 
 p {
-  margin: 0;
-  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
 }
 
 a {
   color: var(--color-text-link);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: var(--transition-default);
 }
 
 a:hover {
   color: var(--color-text-link-hover);
-  text-decoration: underline;
 }
 
-/* Code styling */
-code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  background-color: var(--color-neutral-100);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-}
-
-pre {
-  font-family: var(--font-mono);
-  background-color: var(--color-neutral-100);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  line-height: var(--leading-relaxed);
-}
-
-pre code {
-  background: none;
-  padding: 0;
-}
-
-/* Form element resets */
-button, input, select, textarea {
-  font-family: inherit;
-  font-size: inherit;
-}
-
-button:focus,
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
-}
-
-/* Utility classes for common patterns */
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.w-full {
+/* Layout */
+.container {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
 }
 
-.h-full {
-  height: 100%;
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.min-h-screen {
-  min-height: 100vh;
+::-webkit-scrollbar-track {
+  background: var(--color-neutral-100);
 }
 
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-300);
+  border-radius: var(--radius-full);
 }
 
-.mb-2 {
-  margin-bottom: var(--space-2);
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-400);
 }
 
-.mb-4 {
-  margin-bottom: var(--space-4);
-}
-
-.mb-6 {
-  margin-bottom: var(--space-6);
-}
-
-.mt-2 {
-  margin-top: var(--space-2);
-}
-
-.mt-4 {
-  margin-top: var(--space-4);
-}
-
-.mt-6 {
-  margin-top: var(--space-6);
+/* Selection */
+::selection {
+  background-color: var(--color-primary-200);
+  color: var(--color-text-primary);
 }

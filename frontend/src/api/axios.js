@@ -68,18 +68,34 @@ api.interceptors.response.use(
             timestamp: new Date().toISOString()
         });
         
-        throw new Error(errorMessage);
+        // Throw the error with a structured object
+        const structuredError = {
+            message: errorMessage,
+            details: error.response?.data?.details,
+            status: error.response?.status
+        };
+        throw structuredError;
     }
 );
 
 export const analyzeCode = async (code) => {
     try {
-        // Updated to match backend route
         const response = await api.post('/api/analyze', { code });
         return response.data;
     } catch (error) {
         console.error('Analysis Error:', error);
-        throw error; // Let the interceptor handle the error
+        throw error; // Re-throw to be caught by the component
+    }
+};
+
+export const traceCode = async (code) => {
+    try {
+        // New endpoint for debug tracing
+        const response = await api.post('/api/debug/trace', { code });
+        return response.data;
+    } catch (error) {
+        console.error('Trace Error:', error);
+        throw error; // Re-throw to be caught by the component
     }
 };
 
@@ -89,7 +105,7 @@ export const getExamples = async () => {
         return response.data;
     } catch (error) {
         console.error('Examples Error:', error);
-        throw error; // Let the interceptor handle the error
+        throw error; // Re-throw to be caught by the component
     }
 };
 

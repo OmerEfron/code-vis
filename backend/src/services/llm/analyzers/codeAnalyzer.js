@@ -17,30 +17,41 @@ class CodeAnalyzer {
             const response = await this.provider.analyze(prompt);
             let parsedResponse;
             
-            try {
-                parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
-            } catch (error) {
-                console.error('Failed to parse response:', response);
-                throw new Error('Invalid JSON response from provider');
+            // Check if the response is already a parsed object (from successful JSON parse in provider)
+            if (typeof response === 'object' && response !== null) {
+                 parsedResponse = response;
+                 console.log('Received parsed object from provider.');
+            } else if (typeof response === 'string') {
+                 // If it's a string, the provider failed to parse JSON. Log the content.
+                 console.error('Provider returned a string, indicating JSON parse failure.');
+                 console.error('Unparsable response content:', response);
+                 // Throw a more specific error
+                 throw new Error('LLM response was not valid JSON.');
+            } else {
+                 // Handle unexpected response types
+                 console.error('Provider returned unexpected type:', typeof response);
+                 throw new Error('Unexpected response type from LLM provider.');
             }
 
-            // Ensure the response has the required structure
-            if (!parsedResponse || typeof parsedResponse !== 'object') {
-                throw new Error('Invalid response format: expected an object');
-            }
+            // Ensure the response has the required structure (now assuming it's a parsed object)
+            // Validate LLM response structure, expecting { success: ..., simulatedTrace: { steps: [...] } } - this validation should stay in the route handler
+            // This analyzer is only responsible for getting a parsed object or throwing if not possible.
 
-            // Add success field if not present
-            if (!('success' in parsedResponse)) {
-                parsedResponse = { success: true, ...parsedResponse };
-            }
-
-            return parsedResponse;
+            // The route handler now expects a structured object here, not just the trace.
+            // We'll pass the full parsed response from the provider.
+            return parsedResponse; 
+            
         } catch (error) {
-            console.error('Analysis error:', error);
-            return {
-                success: false,
-                error: error.message || 'Analysis failed'
-            };
+            console.error('Analysis error in CodeAnalyzer:', error);
+            // Re-throw specific errors or wrap generic ones
+            if (error.message.includes('LLM response was not valid JSON') || error.message.includes('Unexpected response type from LLM provider')) {
+                throw error; // Re-throw specific errors
+            } else {
+                 return {
+                    success: false,
+                    error: error.message || 'Analysis failed'
+                 };
+            }
         }
     }
 

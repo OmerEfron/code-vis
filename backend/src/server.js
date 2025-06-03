@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const llmAnalysisRoutes = require('./routes/llmAnalysisRoutes');
 const exampleRoutes = require('./routes/exampleRoutes');
 const visualizationRoutes = require('./routes/visualizationRoutes');
+const debugRoutes = require('./routes/debugRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +60,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/analyze', llmAnalysisRoutes);
 app.use('/api/examples', exampleRoutes);
 app.use('/api/visualization', visualizationRoutes);
+app.use('/api/debug', debugRoutes);
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
@@ -111,4 +113,16 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => {
     console.log(`Backend server running on port ${port}`);
+});
+
+// Add handlers for uncaught exceptions and unhandled promise rejections
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    // It's often recommended to exit the process after logging uncaught exceptions
+    // process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+    // Handle unhandled rejections
 }); 

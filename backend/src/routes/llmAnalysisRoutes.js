@@ -314,4 +314,78 @@ Return ONLY the JSON response matching the schema exactly. Do not include any ad
     }
 });
 
+router.post('/debug', ensureAnalyzer , async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                error: 'No code provided'
+            });
+        }
+
+        // Create a debug-specific prompt
+        const prompt = `
+You are a code debugging expert tasked with analyzing algorithms and generating step-by-step debugging visualizations. Your analysis must strictly follow the provided JSON schema format.
+
+Task:
+1. Analyze the given code to identify potential debugging points
+2. Generate clear, step-by-step debugging explanations
+3. Provide variable state tracking at each step
+4. Structure the response exactly according to the schema below
+
+Important Requirements:
+- The response MUST be valid JSON and match this schema exactly
+- All required fields must be present
+- Each step should show variable values and state changes
+- Include breakpoints at logical points in the code
+- Show the call stack and scope at each step
+
+Schema:
+${JSON.stringify(schema, null, 2)}
+
+Code to analyze:
+${code}
+
+Return ONLY the JSON response matching the schema exactly. Do not include any additional text or explanations outside the JSON structure.`;
+
+        // Call LLM service with the debug prompt
+        const llmResponse = await analyzer.analyze(prompt);
+
+        // Format and validate the response
+        let formattedResponse = llmResponse;
+        if (llmResponse && !llmResponse.success && !llmResponse.analysis) {
+            // If LLM returned just the analysis object, wrap it properly
+            formattedResponse = {
+                success: true,
+                analysis: llmResponse
+            };
+        }
+
+        // Validate the response
+        const validation = validateAnalysisResponse(formattedResponse);
+        if (!validation.valid) {
+            console.error('Debug response validation failed:', validation.errors);
+            return res.status(500).json({
+                success: false,
+                error: 'Debug analysis failed schema validation',
+                validationErrors: validation.errors
+            });
+        }
+
+        res.json({
+            success: true,
+            analysis: formattedResponse.analysis
+        });
+
+    } catch (error) {
+        console.error('Debug analysis error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to analyze code for debugging',
+            details: error.message
+        });
+    }
+});
+
 module.exports = router; 

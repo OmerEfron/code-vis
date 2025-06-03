@@ -5,17 +5,22 @@ class OpenAIProvider extends BaseLLMProvider {
     constructor(config) {
         super(config);
         this.client = null;
+        console.log('OpenAIProvider initialized with config:', config);
     }
 
     async initialize() {
+        console.log('Initializing OpenAI provider...');
         if (!this.client) {
             if (!process.env.OPENAI_API_KEY) {
+                console.error('OPENAI_API_KEY environment variable is not set');
                 throw new Error('OPENAI_API_KEY environment variable is not set');
             }
             try {
+                console.log('Creating OpenAI client...');
                 this.client = new OpenAI({
                     apiKey: process.env.OPENAI_API_KEY
                 });
+                console.log('OpenAI client created successfully');
             } catch (error) {
                 console.error('Failed to initialize OpenAI client:', error);
                 throw new Error(`OpenAI initialization failed: ${error.message}`);
@@ -24,16 +29,65 @@ class OpenAIProvider extends BaseLLMProvider {
     }
 
     async analyze(prompt, options = {}) {
-        if (!this.client) await this.initialize();
+        console.log('Starting OpenAI analysis...');
+        if (!this.client) {
+            console.log('Client not initialized, initializing now...');
+            await this.initialize();
+        }
         
-        const response = await this.client.chat.completions.create({
-            model: options.model || 'gpt-4',
-            messages: [{ role: 'user', content: prompt }],
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 2000
-        });
+        try {
+            console.log('Sending request to OpenAI chat completions...');
+            const response = await this.client.chat.completions.create({
+                model: options.model || 'gpt-4',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: options.temperature || 0.7,
+                max_tokens: options.maxTokens || 2000
+            });
 
-        return response.choices[0].message.content;
+            console.log('Received raw response from OpenAI.');
+            
+            // Check if response and choices are valid
+            if (!response || !response.choices || response.choices.length === 0) {
+                 console.error('Invalid or empty response from OpenAI', response);
+                 throw new Error('Invalid or empty response from OpenAI');
+            }
+
+            let content = response.choices[0].message.content;
+            console.log('Extracted content from OpenAI response.');
+            
+            // Use a more flexible regex to find the JSON markdown block anywhere in the content
+            const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+            if (jsonMatch && jsonMatch[1]) {
+                content = jsonMatch[1];
+                console.log('Extracted JSON content from markdown block.');
+            } else {
+                console.log('Content does not appear to contain a JSON markdown block.');
+                // Optionally, log the content that wasn't parsed as JSON for debugging
+                // console.log('Unparsed content:', content);
+            }
+
+            // Try to parse the (potentially extracted) content as JSON
+            try {
+                console.log('Attempting to parse content as JSON...');
+                const parsedContent = JSON.parse(content);
+                console.log('Successfully parsed content as JSON.');
+                return parsedContent;
+            } catch (parseError) {
+                console.log('Content is not valid JSON, returning as string.', parseError.message);
+                // If JSON parsing fails even after extraction, it might not be the expected JSON format
+                // Return the original content or an error depending on desired behavior
+                // For now, we'll return the content as is, letting the caller handle it
+                return content; // Or throw an error if strict JSON is required
+            }
+        } catch (error) {
+            console.error('OpenAI API call failed:', {
+                name: error.name,
+                message: error.message,
+                status: error.status,
+                response: error.response?.data // Log response data if available
+            });
+            throw new Error(`OpenAI API error: ${error.message}`);
+        }
     }
 
     async detectAlgorithm(code, options = {}) {
