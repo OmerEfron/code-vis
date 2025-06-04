@@ -23,7 +23,6 @@ const DebugTraceVisualization = ({ code, simulatedTrace }) => {
 
     useEffect(() => {
         setCodeLines(code.split('\n'));
-        // If there's an error, jump to the first error step
         if (firstErrorStep !== -1) {
             setCurrentStepIndex(firstErrorStep);
         }
@@ -77,6 +76,46 @@ const DebugTraceVisualization = ({ code, simulatedTrace }) => {
             maxWidth: '1200px',
             margin: '0 auto'
         }}>
+            {/* Sample Execution Section */}
+            {simulatedTrace.sampleExecution && (
+                <div style={{
+                    backgroundColor: '#f8f9fa',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    marginBottom: '20px'
+                }}>
+                    <h2 style={{ marginTop: 0, color: '#333' }}>Sample Execution</h2>
+                    <div style={{ marginBottom: '15px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Input:</h3>
+                        <pre style={{
+                            backgroundColor: '#fff',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            margin: 0
+                        }}>
+                            {simulatedTrace.sampleExecution.input}
+                        </pre>
+                    </div>
+                    <div style={{ marginBottom: '15px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Expected Output:</h3>
+                        <pre style={{
+                            backgroundColor: '#fff',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            margin: 0
+                        }}>
+                            {simulatedTrace.sampleExecution.expectedOutput}
+                        </pre>
+                    </div>
+                    <p style={{ margin: 0, color: '#666' }}>
+                        {simulatedTrace.sampleExecution.explanation}
+                    </p>
+                </div>
+            )}
+
             {/* Error banner if there's an error */}
             {firstErrorStep !== -1 && (
                 <div style={{

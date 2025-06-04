@@ -8,6 +8,38 @@ const { validateAnalysisResponse } = require('../schemas/validateSchema'); // Im
 // Initialize the analyzer (reusing the LLM analyzer)
 let analyzer = null;
 
+// Helper function to detect programming language from code
+const detectLanguage = (code) => {
+    // Simple language detection based on code patterns
+    if (code.includes('function') && code.includes('const') || code.includes('let')) {
+        return 'javascript';
+    } else if (code.includes('#include') || code.includes('std::')) {
+        return 'cpp';
+    } else if (code.includes('def ') || code.includes('import ')) {
+        return 'python';
+    } else if (code.includes('public class') || code.includes('System.out')) {
+        return 'java';
+    }
+    return 'unknown';
+};
+
+// Helper function to generate sample input based on language
+const generateSampleInput = (code, language) => {
+    // Generate appropriate sample input based on language
+    switch (language) {
+        case 'javascript':
+            return '[1, 2, 3, 4, 5]';
+        case 'cpp':
+            return '{1, 2, 3, 4, 5}';
+        case 'python':
+            return '[1, 2, 3, 4, 5]';
+        case 'java':
+            return '{1, 2, 3, 4, 5}';
+        default:
+            return '[]';
+    }
+};
+
 // Middleware to ensure analyzer is initialized
 const ensureAnalyzer = async (req, res, next) => {
     if (!analyzer) {
@@ -20,16 +52,6 @@ const ensureAnalyzer = async (req, res, next) => {
         }
     }
     next();
-};
-
-// Helper to detect code language (improved)
-const detectLanguage = (code) => {
-    // Improved detection based on common syntax patterns
-    if (code.includes('#include') || code.includes('int main') || code.includes('cout <<') || code.includes('void ') || code.includes('int ') || code.includes('char ') || code.includes('float ') || code.includes('double ') || code.includes('std::')) return 'cpp';
-    if (code.includes('System.out.println') || code.includes('public static void main') || code.includes('class ') || code.includes('import java')) return 'java';
-    if (code.includes('print(') || code.includes('def ') || code.includes('import ') || code.includes('class ')) return 'python';
-    // Default to javascript if no clear pattern is found
-    return 'javascript';
 };
 
 // Helper function to recursively sanitize data for JSON serialization
@@ -78,9 +100,24 @@ router.post('/trace', ensureAnalyzer, async (req, res) => {
     const language = detectLanguage(code);
     console.log('Detected language:', language);
 
-    let analysisResult = null; // Will hold the structured analysis (like simulatedTrace)
-    let success = false; // Overall success status of the API request
-    let primaryError = null; // Top-level error for the API request
+    // Add sample execution data
+    let sampleExecution = null;
+    try {
+        // Generate sample input based on the code
+        const sampleInput = generateSampleInput(code, language);
+        sampleExecution = {
+            input: sampleInput,
+            expectedOutput: "Sample execution result will be shown here",
+            explanation: "This is a sample execution to help you understand how the code works"
+        };
+    } catch (error) {
+        console.error('Error generating sample execution:', error);
+        // Continue without sample execution if there's an error
+    }
+
+    let analysisResult = null;
+    let success = false;
+    let primaryError = null;
 
     try {
         console.log('Starting execution path...');
@@ -208,11 +245,11 @@ router.post('/trace', ensureAnalyzer, async (req, res) => {
             try {
                 console.log('Preparing LLM prompt...');
                 const prompt = `
-You are a code analysis expert tasked with simulating the step-by-step execution of code and identifying potential errors in real-time. Your analysis must strictly follow the provided JSON schema format, specifically focusing on the 'simulatedTrace' object.
+You are a code analysis expert tasked with simulating the step-by-step execution of code and identifying potential errors in real-time. Your analysis must strictly follow the provided JSON schema format.
 
 Task:
 1. Read the provided code carefully, understanding its logic and flow for ${language}.
-2. Simulate the execution of the code line by line, step by step, EXACTLY as a debugger would, from start to FINISH.
+2. Simulate the execution of the code line by line, step by step, EXACTLY as a debugger would.
 3. For each line of code:
    - Identify the exact line number
    - Describe what the code is doing
@@ -247,12 +284,62 @@ Important Requirements:
 - ENSURE THE SIMULATION IS COMPLETE AND COVERS THE ENTIRE EXECUTION FLOW unless an error is encountered.
 
 Schema for simulatedTrace object:
-${JSON.stringify(schema.properties.analysis.properties.simulatedTrace, null, 2)}
+{
+  "type": "object",
+  "required": ["steps", "finalState"],
+  "properties": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["lineNumber", "explanation", "variables"],
+        "properties": {
+          "lineNumber": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "isPotentialError": {
+            "type": "boolean"
+          },
+          "errorMessage": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "finalState": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "finalError": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "stack": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
 
 Code to simulate tracing for (in ${language}):
 \`\`\`${language}\n${code}\n\`\`\`
 
-Return ONLY the JSON for the 'simulatedTrace' object as defined in the schema, and ensure the simulation is complete. ABSOLUTELY NO ADDITIONAL TEXT OR EXPLANATION OUTSIDE THE JSON.`;
+Return ONLY the JSON object that matches the schema above. Do not include any other text or explanation.
+`;
 
                 console.log('Sending code to LLM for analysis...');
                 // analyzer.analyze returns a parsed object or throws
@@ -263,108 +350,110 @@ Return ONLY the JSON for the 'simulatedTrace' object as defined in the schema, a
                 if (llmResponse && typeof llmResponse === 'object') {
                     // Case 1: LLM returned the simulatedTrace object directly (expected format)
                     if (Array.isArray(llmResponse.steps) && llmResponse.finalState) { // Basic check for trace structure
-                         console.log('LLM response format: Appears to be simulatedTrace object.');
-                         // Sanitize the raw LLM object before using it
-                         analysisResult = { // Structure matches the 'analysis' property in the schema
+                        console.log('LLM response format: Appears to be simulatedTrace object.');
+                        // Sanitize the raw LLM object before using it
+                        analysisResult = { // Structure matches the 'analysis' property in the schema
                             simulatedTrace: sanitizeForJson(llmResponse)
-                            // Other analysis fields would go here if LLM provided them
-                         };
-                         // Determine success based on whether the *trace itself* indicates an error
-                         const hasErrorInTrace = analysisResult.simulatedTrace.finalError !== null || (Array.isArray(analysisResult.simulatedTrace.steps) && analysisResult.simulatedTrace.steps.some(step => step.isPotentialError));
-                         success = true; // API request was successful because we obtained analysis data (the trace)
-                         primaryError = null; // No backend processing error if we successfully got a trace
-
-                    } else if (llmResponse.type === 'object' && llmResponse.properties && llmResponse.required) {
-                         // Case 2: LLM returned the schema definition instead of trace data
-                         console.error('LLM returned schema definition instead of trace data.', llmResponse);
-                         success = false;
-                         primaryError = { message: 'LLM failed to generate trace data', details: 'The language model returned the schema definition instead of the actual trace.' };
-                         analysisResult = null; // No analysis was generated
-
-                    } else if (llmResponse.error) {
-                         // Case 3: LLM returned an object indicating an LLM-level error
-                         console.error('LLM returned an error object:', llmResponse);
-                         success = false;
-                         primaryError = { message: 'LLM processing error', details: llmResponse.error };
-                         analysisResult = null;
-
+                        };
+                        // Determine success based on whether the *trace itself* indicates an error
+                        const hasErrorInTrace = analysisResult.simulatedTrace.finalError !== null || 
+                            (Array.isArray(analysisResult.simulatedTrace.steps) && 
+                             analysisResult.simulatedTrace.steps.some(step => step.isPotentialError));
+                        success = true; // API request was successful because we obtained analysis data (the trace)
+                        primaryError = null; // No backend processing error if we successfully got a trace
                     } else {
-                         // Case 4: Unexpected object structure from LLM
-                         console.error('Unexpected LLM object format:', llmResponse);
-                         success = false;
-                         primaryError = { message: 'Unexpected object structure from LLM', details: llmResponse };
-                         analysisResult = null;
+                        // Case 2: LLM returned an object but it doesn't match the expected structure
+                        console.error('LLM response format: Object returned but structure does not match schema.');
+                        success = false;
+                        primaryError = { 
+                            message: 'LLM response does not match expected schema', 
+                            details: 'Response missing required fields: steps or finalState' 
+                        };
+                        analysisResult = null;
                     }
-                } else if (typeof llmResponse === 'string') {
-                     // This case should theoretically be caught by the analyzer throwing,
-                     // but include as a fallback.
-                     console.error('LLM provider returned raw string:', llmResponse);
-                     success = false;
-                     primaryError = { message: 'LLM provider returned raw string', details: llmResponse };
-                     analysisResult = null;
-
                 } else {
-                    // Case 6: Truly unexpected response type from analyzer
-                    console.error('Analyzer returned unexpected non-object type:', typeof llmResponse);
+                    // Case 3: LLM returned something unexpected
+                    console.error('LLM response format: Unexpected type returned.');
                     success = false;
-                    primaryError = { message: 'Analyzer returned unexpected type', details: `Expected object, received ${typeof llmResponse}` };
+                    primaryError = { 
+                        message: 'Analyzer returned unexpected type', 
+                        details: `Expected object, received ${typeof llmResponse}` 
+                    };
                     analysisResult = null;
                 }
                 // === END: Check LLM Response Type and Structure ===
 
+                // Add sample execution to the response
+                if (analysisResult) {
+                    analysisResult.sampleExecution = sampleExecution;
+                }
+
+                // Construct the final executionResult to send to the frontend
+                // This structure is consistent for both JS (VM2) and LLM paths
+                const executionResult = {
+                    success: success, // Overall API success (did we get analysis data?)
+                    language: language,
+                    analysis: analysisResult, // Will be null if analysis failed
+                    error: primaryError, // Error related to the API request or code execution
+                    consoleOutput: language === 'javascript' ? analysisResult?.simulatedTrace?.consoleOutput || [] : [], // Only capture console for JS
+                };
+
+                // === START: Detailed Logging of final executionResult ===
+                console.log('Sending final executionResult to client:');
+                try {
+                    // Log the FINAL structure being sent, including the full analysis/trace data
+                     console.log(JSON.stringify(executionResult, (key, value) => {
+                        // Custom replacer to handle large/complex objects like 'steps' in trace
+                        if (key === 'steps' && Array.isArray(value)) {
+                            return `[Array with ${value.length} steps]`; // Summarize steps array
+                        }
+                        if (value && typeof value === 'object' && Object.keys(value).length > 10 && key !== 'error' && key !== 'finalError' && key !== 'details') {
+                             // Summarize other potentially large objects
+                             return `{Object with ${Object.keys(value).length} keys}`;
+                        }
+                        return value;
+                    }, 2));
+                     // Log the estimated full size if trace data is present
+                     if (analysisResult?.simulatedTrace) {
+                        const traceSize = JSON.stringify(analysisResult.simulatedTrace).length;
+                        console.log(`Simulated trace estimated size (after processing): ${traceSize} characters`);
+                    }
+
+
+                } catch (jsonError) {
+                    console.error('Failed to stringify final executionResult for logging:', jsonError);
+                     console.log(executionResult); // Log the object directly if stringify fails
+                }
+                console.log('=== END: Detailed Logging of final executionResult ===');
+
+                // Send the response
+                if (!success) {
+                    res.status(500).json(executionResult);
+                } else {
+                    res.json(executionResult);
+                }
+
             } catch (llmError) {
                 // Catch errors thrown by analyzer.analyze (e.g., invalid JSON from provider)
                 console.error('Error during LLM analysis or provider communication:', llmError);
-                 success = false; // LLM analysis failed
-                 primaryError = {
-                     type: llmError.name,
-                     message: llmError.message,
-                     stack: llmError.stack
-                 };
-                 analysisResult = null; // No analysis could be generated
+                success = false; // LLM analysis failed
+                primaryError = {
+                    type: llmError.name,
+                    message: llmError.message,
+                    stack: llmError.stack
+                };
+                analysisResult = null; // No analysis could be generated
+
+                // Send error response
+                res.status(500).json({
+                    success: false,
+                    language: language,
+                    analysis: null,
+                    error: primaryError,
+                    consoleOutput: []
+                });
             }
         }
-
-        // Construct the final executionResult to send to the frontend
-        // This structure is consistent for both JS (VM2) and LLM paths
-        const executionResult = {
-            success: success, // Overall API success (did we get analysis data?)
-            language: language,
-            analysis: analysisResult, // Will be null if analysis failed
-            error: primaryError, // Error related to the API request or code execution
-            consoleOutput: language === 'javascript' ? analysisResult?.simulatedTrace?.consoleOutput || [] : [], // Only capture console for JS
-        };
-
-        // === START: Detailed Logging of final executionResult ===
-        console.log('Sending final executionResult to client:');
-        try {
-            // Log the FINAL structure being sent, including the full analysis/trace data
-             console.log(JSON.stringify(executionResult, (key, value) => {
-                // Custom replacer to handle large/complex objects like 'steps' in trace
-                if (key === 'steps' && Array.isArray(value)) {
-                    return `[Array with ${value.length} steps]`; // Summarize steps array
-                }
-                if (value && typeof value === 'object' && Object.keys(value).length > 10 && key !== 'error' && key !== 'finalError' && key !== 'details') {
-                     // Summarize other potentially large objects
-                     return `{Object with ${Object.keys(value).length} keys}`;
-                }
-                return value;
-            }, 2));
-             // Log the estimated full size if trace data is present
-             if (analysisResult?.simulatedTrace) {
-                const traceSize = JSON.stringify(analysisResult.simulatedTrace).length;
-                console.log(`Simulated trace estimated size (after processing): ${traceSize} characters`);
-            }
-
-
-        } catch (jsonError) {
-            console.error('Failed to stringify final executionResult for logging:', jsonError);
-             console.log(executionResult); // Log the object directly if stringify fails
-        }
-        console.log('=== END: Detailed Logging of final executionResult ===');
-
-
-        res.json(executionResult);
 
     } catch (error) {
         // This is the top-level catch for any unexpected errors in the route handler itself

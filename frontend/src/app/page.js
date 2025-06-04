@@ -11,6 +11,7 @@ export default function Home() {
     const [visualizationData, setVisualizationData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isSwitched, setIsSwitched] = useState(true);
     const router = useRouter();
 
     const handleAnalyze = async () => {
@@ -32,16 +33,20 @@ export default function Home() {
         }
     };
 
+    const handleSwitch = () => {
+        setIsSwitched(!isSwitched);
+        router.push('/debug');
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <h1>Code Visualization</h1>
                 <button 
-                    className={styles.switchButton}
-                    onClick={() => router.push('/debug')}
-                >
-                    Switch to Debug Mode
-                </button>
+                    className={`${styles.switchButton} ${isSwitched ? styles.switched : ''}`}
+                    onClick={handleSwitch}
+                    aria-label="Switch to Debug Mode"
+                />
             </div>
 
             <div className={styles.editor}>

@@ -1,11 +1,12 @@
 const LLMFactory = require('../factory');
+const { BaseAnalyzer } = require('./baseAnalyzer');
 
-class CodeAnalyzer {
+class CodeAnalyzer extends BaseAnalyzer {
     constructor(provider) {
         if (!provider) {
             throw new Error('Provider is required for CodeAnalyzer');
         }
-        this.provider = provider;
+        super(provider);
     }
 
     async initialize() {
@@ -14,44 +15,30 @@ class CodeAnalyzer {
 
     async analyze(prompt) {
         try {
-            const response = await this.provider.analyze(prompt);
-            let parsedResponse;
+            console.log('CodeAnalyzer: Sending prompt to provider.analyze');
+            const resultFromProvider = await this.provider.analyze(prompt);
             
-            // Check if the response is already a parsed object (from successful JSON parse in provider)
-            if (typeof response === 'object' && response !== null) {
-                 parsedResponse = response;
-                 console.log('Received parsed object from provider.');
-            } else if (typeof response === 'string') {
-                 // If it's a string, the provider failed to parse JSON. Log the content.
-                 console.error('Provider returned a string, indicating JSON parse failure.');
-                 console.error('Unparsable response content:', response);
-                 // Throw a more specific error
-                 throw new Error('LLM response was not valid JSON.');
+            console.log('CodeAnalyzer: Received response from provider.analyze', typeof resultFromProvider);
+
+            // Check if the result is a parsed object
+            if (typeof resultFromProvider === 'object' && resultFromProvider !== null) {
+                console.log('CodeAnalyzer: Provider returned a parsed object.');
+                
+                // Validate the response structure
+                if (resultFromProvider.steps && Array.isArray(resultFromProvider.steps) && 
+                    resultFromProvider.finalState && typeof resultFromProvider.finalState === 'object') {
+                    return resultFromProvider;
+                } else {
+                    console.error('CodeAnalyzer: Provider returned object with invalid structure:', resultFromProvider);
+                    throw new Error('LLM provider returned object with invalid structure');
+                }
             } else {
-                 // Handle unexpected response types
-                 console.error('Provider returned unexpected type:', typeof response);
-                 throw new Error('Unexpected response type from LLM provider.');
+                console.error('CodeAnalyzer: Provider returned unexpected type:', typeof resultFromProvider);
+                throw new Error(`LLM provider returned unexpected type: ${typeof resultFromProvider}`);
             }
-
-            // Ensure the response has the required structure (now assuming it's a parsed object)
-            // Validate LLM response structure, expecting { success: ..., simulatedTrace: { steps: [...] } } - this validation should stay in the route handler
-            // This analyzer is only responsible for getting a parsed object or throwing if not possible.
-
-            // The route handler now expects a structured object here, not just the trace.
-            // We'll pass the full parsed response from the provider.
-            return parsedResponse; 
-            
         } catch (error) {
             console.error('Analysis error in CodeAnalyzer:', error);
-            // Re-throw specific errors or wrap generic ones
-            if (error.message.includes('LLM response was not valid JSON') || error.message.includes('Unexpected response type from LLM provider')) {
-                throw error; // Re-throw specific errors
-            } else {
-                 return {
-                    success: false,
-                    error: error.message || 'Analysis failed'
-                 };
-            }
+            throw error;
         }
     }
 

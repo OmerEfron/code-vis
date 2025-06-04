@@ -11,13 +11,14 @@ export default function DebugVisualization() {
     const [debugData, setDebugData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isSwitched, setIsSwitched] = useState(false);
     const router = useRouter();
 
     const handleAnalyze = async () => {
         try {
             setLoading(true);
             setError(null);
-            setDebugData(null); // Clear previous data
+            setDebugData(null);
 
             const response = await fetch('/api/debug/trace', {
                 method: 'POST',
@@ -27,54 +28,51 @@ export default function DebugVisualization() {
                 body: JSON.stringify({ code }),
             });
 
-            // Check if the response is OK (status 200-299)
             if (!response.ok) {
-                const errorBody = await response.text(); // Read response body as text for error details
+                const errorBody = await response.text();
                 console.error('Backend error response:', response.status, response.statusText, errorBody);
-                throw new Error(`Backend error: ${response.status} ${response.statusText} - ${errorBody.substring(0, 100)}...`); // Show status and partial body
+                throw new Error(`Backend error: ${response.status} ${response.statusText} - ${errorBody.substring(0, 100)}...`);
             }
 
-            // Check if the response is JSON before parsing
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                const textBody = await response.text(); // Read response body as text
+                const textBody = await response.text();
                 console.error('Received non-JSON response:', textBody);
-                throw new Error(`Expected JSON response, but received ${contentType || 'unknown content type'}. Response body: ${textBody.substring(0, 200)}...`); // Show content type and partial body
+                throw new Error(`Expected JSON response, but received ${contentType || 'unknown content type'}. Response body: ${textBody.substring(0, 200)}...`);
             }
 
             const data = await response.json();
 
-            // The backend now returns { success, language, consoleOutput, error, simulatedTrace }
-            // We check data.success first for API-level errors (e.g., backend crashed, or LLM not initialized)
             if (!data.success) {
                 const errorMessage = typeof data.error === 'object' ? 
                     (data.error.message || JSON.stringify(data.error)) : 
                     (data.error || 'Failed to process debug trace request');
                 setError(errorMessage);
-                setDebugData(null); // Ensure debugData is null on backend API error
+                setDebugData(null);
             } else {
-                // Backend endpoint was reached successfully, now check for execution/simulation errors
                 if (data.error) {
-                    // Execution/simulation had an error, display the error message from the backend response
                     const executionErrorMessage = typeof data.error === 'object' ?
                         (data.error.message || JSON.stringify(data.error)) :
                         (data.error || 'Code execution/simulation error');
                     setError(executionErrorMessage);
-                    setDebugData(data); // Still set debugData to show console output or partial trace if available
-                } else {
-                    // Success and no execution/simulation error
                     setDebugData(data);
-                    setError(null); // Clear any previous error message
+                } else {
+                    setDebugData(data);
+                    setError(null);
                 }
             }
 
         } catch (err) {
-            // Network or other frontend error during the fetch call
             setError(err.message || 'An unknown error occurred.');
             setDebugData(null);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSwitch = () => {
+        setIsSwitched(!isSwitched);
+        router.push('/');
     };
 
     const renderDebugOutput = () => {
@@ -129,11 +127,10 @@ export default function DebugVisualization() {
             <div className={styles.header}>
                 <h1>Debug Visualization</h1>
                 <button 
-                    className={styles.switchButton}
-                    onClick={() => router.push('/')}
-                >
-                    Switch to Regular Visualization
-                </button>
+                    className={`${styles.switchButton} ${isSwitched ? styles.switched : ''}`}
+                    onClick={handleSwitch}
+                    aria-label="Switch to Regular Visualization"
+                />
             </div>
 
             <div className={styles.editor}>

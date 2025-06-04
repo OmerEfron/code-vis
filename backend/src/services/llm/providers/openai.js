@@ -48,22 +48,20 @@ class OpenAIProvider extends BaseLLMProvider {
             
             // Check if response and choices are valid
             if (!response || !response.choices || response.choices.length === 0) {
-                 console.error('Invalid or empty response from OpenAI', response);
-                 throw new Error('Invalid or empty response from OpenAI');
+                console.error('Invalid or empty response from OpenAI', response);
+                throw new Error('Invalid or empty response from OpenAI');
             }
 
             let content = response.choices[0].message.content;
             console.log('Extracted content from OpenAI response.');
             
-            // Use a more flexible regex to find the JSON markdown block anywhere in the content
+            // Try to extract JSON from markdown block if present
             const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
             if (jsonMatch && jsonMatch[1]) {
                 content = jsonMatch[1];
                 console.log('Extracted JSON content from markdown block.');
             } else {
                 console.log('Content does not appear to contain a JSON markdown block.');
-                // Optionally, log the content that wasn't parsed as JSON for debugging
-                // console.log('Unparsed content:', content);
             }
 
             // Try to parse the (potentially extracted) content as JSON
@@ -71,20 +69,30 @@ class OpenAIProvider extends BaseLLMProvider {
                 console.log('Attempting to parse content as JSON...');
                 const parsedContent = JSON.parse(content);
                 console.log('Successfully parsed content as JSON.');
-                return parsedContent;
+                
+                // Accept both {steps, finalState, ...} or {simulatedTrace: {...}}
+                let traceObj = parsedContent;
+                if (parsedContent.simulatedTrace && typeof parsedContent.simulatedTrace === 'object') {
+                    traceObj = parsedContent.simulatedTrace;
+                }
+                // Validate that the response has the expected structure
+                if (traceObj.steps && Array.isArray(traceObj.steps) && 
+                    traceObj.finalState && typeof traceObj.finalState === 'object') {
+                    return traceObj;
+                } else {
+                    console.error('Response does not match expected schema:', parsedContent);
+                    throw new Error('Response does not match expected schema');
+                }
             } catch (parseError) {
-                console.log('Content is not valid JSON, returning as string.', parseError.message);
-                // If JSON parsing fails even after extraction, it might not be the expected JSON format
-                // Return the original content or an error depending on desired behavior
-                // For now, we'll return the content as is, letting the caller handle it
-                return content; // Or throw an error if strict JSON is required
+                console.error('Failed to parse or validate JSON response:', parseError);
+                throw new Error(`Invalid JSON response: ${parseError.message}`);
             }
         } catch (error) {
             console.error('OpenAI API call failed:', {
                 name: error.name,
                 message: error.message,
                 status: error.status,
-                response: error.response?.data // Log response data if available
+                response: error.response?.data
             });
             throw new Error(`OpenAI API error: ${error.message}`);
         }

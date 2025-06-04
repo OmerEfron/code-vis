@@ -17,17 +17,68 @@
 }
 
 .switchButton {
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
+    position: relative;
+    width: 120px;
+    height: 40px;
+    background-color: #4CD964;
+    border-radius: 20px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px;
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.switchButton::before {
+    content: '';
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    background-color: white;
+    border-radius: 50%;
+    left: 3px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.switchButton::after {
+    content: 'Debug';
+    position: absolute;
+    right: 10px;
+    color: white;
+    font-weight: 500;
+}
+
+.switchButton.switched {
+    background-color: #007AFF;
+}
+
+.switchButton.switched::before {
+    transform: translateX(80px);
+}
+
+.switchButton.switched::after {
+    content: 'Visual';
+    left: 10px;
+    right: auto;
 }
 
 .switchButton:hover {
-    background-color: var(--primary-color-dark);
+    filter: brightness(1.1);
+}
+
+.switchButton:hover::before {
+    transform: translateX(2px);
+}
+
+.switchButton.switched:hover::before {
+    transform: translateX(78px);
 }
 
 .editor {
@@ -38,20 +89,17 @@
     width: 100%;
     min-height: 200px;
     padding: 1rem;
-    font-family: monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    background-color: var(--background-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    resize: vertical;
     margin-bottom: 1rem;
+    resize: vertical;
 }
 
 .analyzeButton {
     padding: 0.75rem 1.5rem;
-    background-color: var(--primary-color);
+    background-color: #2ECC71;
     color: white;
     border: none;
     border-radius: 4px;
@@ -61,11 +109,11 @@
 }
 
 .analyzeButton:hover:not(:disabled) {
-    background-color: var(--primary-color-dark);
+    background-color: #27AE60;
 }
 
 .analyzeButton:disabled {
-    background-color: var(--disabled-color);
+    background-color: #95A5A6;
     cursor: not-allowed;
 }
 
