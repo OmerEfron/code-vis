@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "CodeViz2 - Algorithm Visualization Through Metaphors",
-  description: "Interactive algorithm visualization platform that helps understand complex algorithms through relatable real-world metaphors and step-by-step visual demonstrations.",
+  title: "Huffman Code Visualization",
+  description: "Interactive Huffman coding algorithm visualization - see how text compression works step by step.",
 };
 
 export default function RootLayout({ children }) {
