@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const llmAnalysisRoutes = require('./routes/llmAnalysisRoutes');
 const exampleRoutes = require('./routes/exampleRoutes');
 const visualizationRoutes = require('./routes/visualizationRoutes');
+const algorithmsRoutes = require('./routes/algorithms');
 
 // Load environment variables
 dotenv.config();
@@ -59,7 +60,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/analyze', llmAnalysisRoutes);
 app.use('/api/examples', exampleRoutes);
 app.use('/api/visualization', visualizationRoutes);
-
+app.use('/api/algorithms', algorithmsRoutes);
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
     res.status(404).json({
