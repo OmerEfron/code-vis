@@ -19,43 +19,44 @@ A powerful backend service for analyzing code algorithms and generating educatio
 - **AI Integration**: OpenAI API (GPT-4)
 - **Validation**: AJV (JSON Schema validation)
 - **Cross-Origin**: CORS support
+- **Rate Limiting**: Express-rate-limit for API protection
 - **Environment**: dotenv for configuration
 - **Development**: Nodemon for hot reload
 
 ## 📁 Project Structure
-
-```
 backend/
 ├── src/
-│   ├── controllers/           # Request handlers and business logic
-│   │   └── visualizationController.js
-│   ├── data/
-│   │   └── examples/         # Saved analysis examples (JSON files)
-│   ├── models/              # Algorithm models and data structures
-│   │   └── Algorithm.js     # Base algorithm classes
-│   ├── parsers/             # Code parsing utilities
-│   │   └── cParser.js       # C language parser
-│   ├── routes/              # API route definitions
-│   │   ├── exampleRoutes.js      # Example management endpoints
-│   │   ├── llmAnalysisRoutes.js  # Main analysis endpoints
-│   │   └── visualizationRoutes.js # Visualization generation
-│   ├── schemas/             # JSON schemas and validation
-│   │   ├── analysisSchema.json   # Analysis response schema
-│   │   └── validateSchema.js     # Validation utilities
-│   ├── services/            # Core business services
-│   │   ├── examples/
-│   │   │   └── exampleManager.js # Example CRUD operations
-│   │   └── llm/            # LLM integration services
-│   │       ├── analyzers/
-│   │       │   └── codeAnalyzer.js # Main code analysis logic
-│   │       ├── factory.js          # LLM provider factory
-│   │       └── providers/          # LLM service providers
-│   │           ├── base.js         # Abstract base provider
-│   │           └── openai.js       # OpenAI implementation
-│   └── server.js           # Application entry point
-├── package.json            # Dependencies and scripts
-└── README.md              # This file
-```
+│ ├── controllers/ # Request handlers and business logic
+│ │ └── visualizationController.js
+│ ├── data/
+│ │ └── examples/ # Saved analysis examples (JSON files)
+│ ├── middleware/ # Express middleware
+│ │ └── validation.js # Request validation and sanitization
+│ ├── models/ # Algorithm models and data structures
+│ │ └── Algorithm.js # Base algorithm classes
+│ ├── parsers/ # Code parsing utilities
+│ │ └── cParser.js # C language parser
+│ ├── routes/ # API route definitions
+│ │ ├── exampleRoutes.js # Example management endpoints
+│ │ ├── llmAnalysisRoutes.js # Main analysis endpoints
+│ │ └── visualizationRoutes.js # Visualization generation
+│ ├── schemas/ # JSON schemas and validation
+│ │ ├── analysisSchema.json # Analysis response schema
+│ │ └── validateSchema.js # Validation utilities
+│ ├── services/ # Core business services
+│ │ ├── examples/
+│ │ │ └── exampleManager.js # Example CRUD operations
+│ │ └── llm/ # LLM integration services
+│ │ ├── analyzers/
+│ │ │ └── codeAnalyzer.js # Main code analysis logic
+│ │ ├── factory.js # LLM provider factory
+│ │ └── providers/ # LLM service providers
+│ │ ├── base.js # Abstract base provider
+│ │ └── openai.js # OpenAI implementation
+│ └── server.js # Application entry point
+├── package.json # Dependencies and scripts
+└── README.md # This file
+
 
 ## 🚦 Getting Started
 
@@ -87,6 +88,8 @@ backend/
    PORT=3000
    OPENAI_API_KEY=your_openai_api_key_here
    NODE_ENV=development
+   RATE_LIMIT_WINDOW_MS=900000
+   RATE_LIMIT_MAX_REQUESTS=100
    ```
 
 4. **Start the development server:**
@@ -147,6 +150,56 @@ Analyzes code and generates educational metaphors and visualization data.
 #### `GET /api/analyze/providers`
 Returns available LLM providers.
 
+### Visualization Generation
+
+#### `POST /api/visualization/generate`
+Generates step-by-step visualization states for an algorithm.
+
+**Request Body:**
+```json
+{
+  "code": "your_algorithm_code_here",
+  "scenario": "sorting",
+  "data": [5, 2, 8, 1, 9, 3]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "welcome": {
+      "message": "Let's visualize Merge Sort!",
+      "algorithmName": "MergeSort",
+      "description": "A divide-and-conquer sorting algorithm...",
+      "difficulty": "intermediate"
+    },
+    "algorithm": {
+      "type": "mergeSort",
+      "structure": {...},
+      "initialData": [5, 2, 8, 1, 9, 3],
+      "complexity": {...}
+    },
+    "visualization": {
+      "states": [...],
+      "metadata": {...}
+    },
+    "controls": {...}
+  },
+  "meta": {
+    "timestamp": "2023-04-01T12:00:00Z",
+    "algorithmType": "mergeSort",
+    "totalSteps": 12,
+    "estimatedDuration": "1 minutes",
+    "difficulty": "intermediate"
+  }
+}
+```
+
+#### `GET /api/visualization/scenarios`
+Returns available visualization scenarios.
+
 ### Example Management
 
 #### `GET /api/examples`
@@ -170,6 +223,9 @@ Deletes an example by ID.
 | `PORT` | Server port | 3000 | No |
 | `OPENAI_API_KEY` | OpenAI API key | - | Yes |
 | `NODE_ENV` | Environment mode | development | No |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window in ms | 900000 (15 min) | No |
+| `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | 100 | No |
+| `FRONTEND_URL` | Frontend URL for CORS | http://localhost:3001 | No |
 
 ### Schema Validation
 
@@ -202,6 +258,14 @@ const analyzer = LLMFactory.createAnalyzer({
 4. **Example Storage**: Saves successful analyses for future reference
 5. **Visualization Suggestions**: Generates rendering recommendations
 
+### Visualization Pipeline
+
+1. **Code Parsing**: Automatically detects algorithm type from code
+2. **State Generation**: Creates step-by-step algorithm execution states
+3. **Metaphor Application**: Applies educational metaphors to states
+4. **Animation Mapping**: Adds animation and interaction properties
+5. **Response Formatting**: Structures data for frontend visualization
+
 ### Error Handling
 
 Standardized error responses across all endpoints:
@@ -210,7 +274,8 @@ Standardized error responses across all endpoints:
 {
   "success": false,
   "error": "Error message",
-  "details": "Additional error context"
+  "details": "Additional error context",
+  "suggestions": ["Helpful suggestion 1", "Helpful suggestion 2"]
 }
 ```
 
@@ -225,15 +290,13 @@ npm run dev
 
 # Run tests
 npm test
-
-# Run linting
-npm run lint
 ```
 
 ## 🔒 Security Considerations
 
 - Environment variables for sensitive configuration
-- Input validation and sanitization
+- Input validation and sanitization via middleware
+- Rate limiting to prevent abuse
 - Schema validation for all data exchanges
 - CORS configuration for controlled access
 - Error handling without sensitive information exposure
@@ -246,17 +309,10 @@ npm run lint
 2. Configure production OpenAI API key
 3. Set appropriate PORT for your hosting platform
 4. Ensure sufficient memory for AI processing
+5. Adjust rate limits for production traffic
 
 ### Docker Support
 (Coming soon - Docker configuration for containerized deployment)
-
-## 🤝 Contributing
-
-1. **Code Style**: Follow existing patterns and naming conventions
-2. **Error Handling**: Always return standardized error responses
-3. **Documentation**: Update README for new features or API changes
-4. **Testing**: Add tests for new functionality
-5. **Schema Updates**: Update JSON schemas when changing response structures
 
 ### Adding New LLM Providers
 
@@ -272,10 +328,6 @@ npm run lint
 3. Update visualization controller logic
 4. Add example scenarios and test cases
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## 🔗 Related Projects
 
 - **Frontend**: React-based visualization interface
@@ -283,4 +335,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📞 Support
 
-For issues, questions, or contributions, please refer to the main project documentation or create an issue in the repository. 
+For issues, questions, or contributions, please refer to the main project documentation or create an issue in the repository.
