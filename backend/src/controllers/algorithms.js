@@ -1,15 +1,15 @@
 const analyzeHoffman = async (req, res) => {
-    const { hoffmanCode } = req.body;
-    const steps = getHoffmanExecuteSteps(hoffmanCode);
+    const { huffmanCode } = req.body;
+    const steps = getHoffmanExecuteSteps(huffmanCode);
     res.json(steps);
 };
 
-const getHoffmanExecuteSteps = (hoffmanCode) => {
+const getHoffmanExecuteSteps = (huffmanCode) => {
     const steps = [];
     
     // Step 1: Count character frequencies
     const frequencyMap = new Map();
-    for (const char of hoffmanCode) {
+    for (const char of huffmanCode) {
         frequencyMap.set(char, (frequencyMap.get(char) || 0) + 1);
     }
     steps.push({
@@ -72,14 +72,14 @@ const getHoffmanExecuteSteps = (hoffmanCode) => {
     });
 
     // Step 5: Encode the input
-    const encoded = Array.from(hoffmanCode)
+    const encoded = Array.from(huffmanCode)
         .map(char => codes.get(char))
         .join('');
     steps.push({
         step: 5,
         description: "Encode input string",
         data: {
-            original: hoffmanCode,
+            original: huffmanCode,
             encoded: encoded
         }
     });

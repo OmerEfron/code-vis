@@ -53,7 +53,7 @@ api.interceptors.response.use(
 export const analyzeHuffman = async (inputString) => {
     try {
         const response = await api.post('/api/algorithms/hoffman', { 
-            hoffmanCode: inputString 
+            huffmanCode: inputString 
         });
         return response.data;
     } catch (error) {
