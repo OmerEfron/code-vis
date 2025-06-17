@@ -1,11 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    server: {
-        port: 3001
-    },
     env: {
-        BACKEND_URL: 'http://localhost:3000'
+        BACKEND_URL: 'http://localhost:3001'
     },
     webpack: (config) => {
         // This will completely ignore the 'canvas' module

@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Fibonacci",
+      "category": "Mathematical",
+      "timeComplexity": "O(2^n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "The Fibonacci algorithm calculates the nth Fibonacci number iteratively by summing the previous two numbers starting from 0 and 1."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "The position of the Fibonacci number to calculate",
+          "constraints": [
+            "integer",
+            "non-negative"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "n": 6
+          },
+          "expectedOutput": 8
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Growing Spiral",
+        "description": "Visualize a spiral growing outward with each segment representing a Fibonacci number",
+        "learningStyle": "visual",
+        "steps": [
+          "Start with the first two numbers as the center of the spiral",
+          "Extend the spiral by adding the previous two numbers at each step",
+          "Continue until reaching the desired position on the spiral"
+        ],
+        "elements": {
+          "spiral": "representation of Fibonacci sequence",
+          "segment": "individual Fibonacci number",
+          "growth": "expansion of the spiral"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "spiral-segment",
+            "center-point"
+          ],
+          "secondaryElements": [
+            "arrow",
+            "number-label"
+          ],
+          "animations": [
+            "expand",
+            "rotate",
+            "highlight"
+          ],
+          "interactiveElements": [
+            "drag-to-extend",
+            "zoom"
+          ],
+          "layout": {
+            "type": "radial",
+            "arrangement": "spiral"
+          },
+          "colorScheme": {
+            "primary": "#FF6347",
+            "secondary": "#6495ED",
+            "highlight": "#32CD32"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T16:28:21.913Z",
+    "algorithmType": "Fibonacci",
+    "complexity": {
+      "time": "O(2^n)",
+      "space": "O(1)"
+    }
+  }
+}

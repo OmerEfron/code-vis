@@ -1,27 +1,23 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata = {
-  title: "Huffman Code Visualization",
-  description: "Interactive Huffman coding algorithm visualization - see how text compression works step by step.",
+  title: "codeViz - AI-Powered Algorithm Visualizer",
+  description: "Interactive algorithm visualization platform with AI-powered code analysis. Explore sorting, searching, compression algorithms and more with step-by-step visual explanations.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${inter.variable} antialiased`}>
         {children}
       </body>
     </html>

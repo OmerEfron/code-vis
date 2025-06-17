@@ -7,10 +7,8 @@ const Card = ({
   className = '',
   ...props 
 }) => {
-  const classes = [
-    'card',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'bg-white rounded-lg border border-gray-200 shadow-sm';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <div className={classes} {...props}>
@@ -24,10 +22,8 @@ const CardHeader = ({
   className = '',
   ...props 
 }) => {
-  const classes = [
-    'card-header',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'px-6 py-4 border-b border-gray-200';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <div className={classes} {...props}>
@@ -41,10 +37,8 @@ const CardBody = ({
   className = '',
   ...props 
 }) => {
-  const classes = [
-    'card-body',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'px-6 py-4';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <div className={classes} {...props}>
@@ -58,10 +52,8 @@ const CardFooter = ({
   className = '',
   ...props 
 }) => {
-  const classes = [
-    'card-footer',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'px-6 py-4 border-t border-gray-200 bg-gray-50';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <div className={classes} {...props}>
@@ -76,10 +68,8 @@ const CardTitle = ({
   as: Component = 'h3',
   ...props 
 }) => {
-  const classes = [
-    'card-title',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'text-lg font-semibold text-gray-900';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <Component className={classes} {...props}>
@@ -94,10 +84,8 @@ const CardSubtitle = ({
   as: Component = 'p',
   ...props 
 }) => {
-  const classes = [
-    'card-subtitle',
-    className
-  ].filter(Boolean).join(' ');
+  const baseClasses = 'text-sm text-gray-600 mt-1';
+  const classes = [baseClasses, className].filter(Boolean).join(' ');
 
   return (
     <Component className={classes} {...props}>
@@ -112,4 +100,5 @@ Card.Footer = CardFooter;
 Card.Title = CardTitle;
 Card.Subtitle = CardSubtitle;
 
+export { Card };
 export default Card; 

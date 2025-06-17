@@ -1,0 +1,87 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Fibonacci",
+      "category": "Mathematical",
+      "timeComplexity": "O(2^n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "The Fibonacci algorithm calculates the nth Fibonacci number iteratively using a loop and two variables to store the previous two numbers in the sequence.",
+      "confidence": 0.9
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "The input parameter for calculating the nth Fibonacci number",
+          "constraints": [
+            "Integer",
+            "n >= 0"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "n": 6
+          },
+          "expectedOutput": 8
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Rabbit Pair Hopping",
+        "description": "Imagine a pair of rabbits hopping and reproducing to represent the Fibonacci sequence",
+        "learningStyle": "visual",
+        "steps": [
+          "Start with 1 pair of rabbits",
+          "Each pair reproduces a new pair",
+          "Count the total pairs after each generation",
+          "Repeat until the desired generation is reached"
+        ],
+        "elements": {
+          "rabbits": "Fibonacci numbers",
+          "reproduction": "Addition of previous two numbers"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "rabbit-pair",
+            "generation-counter"
+          ],
+          "secondaryElements": [
+            "reproduction-arrow",
+            "total-pairs"
+          ],
+          "animations": [
+            "hop",
+            "reproduce",
+            "count"
+          ],
+          "interactiveElements": [
+            "clickable-rabbits",
+            "slider"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "sequential"
+          },
+          "colorScheme": {
+            "primary": "#FFC0CB",
+            "secondary": "#87CEEB",
+            "highlight": "#FFD700"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T16:32:40.171Z",
+    "algorithmType": "Fibonacci",
+    "complexity": {
+      "time": "O(2^n)",
+      "space": "O(1)"
+    }
+  }
+}

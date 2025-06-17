@@ -1,0 +1,102 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Binary Search",
+      "category": "Searching",
+      "timeComplexity": "O(log n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "Binary search is a divide and conquer algorithm that efficiently finds the target in a sorted array by repeatedly dividing the search interval in half."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "arr",
+          "type": "array",
+          "description": "Input array to search",
+          "constraints": [
+            "sorted"
+          ]
+        },
+        {
+          "name": "target",
+          "type": "number",
+          "description": "Target value to find in the array",
+          "constraints": [
+            "unique"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "arr": [
+              1,
+              3,
+              5,
+              7,
+              9
+            ],
+            "target": 5
+          },
+          "expectedOutput": 2
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Binary Search Tree",
+        "description": "Imagine a binary tree where each node represents a comparison of the target value with the middle element of the array.",
+        "learningStyle": "visual",
+        "steps": [
+          "Start at the root node (middle element)",
+          "If the target is equal to the node value, return the index",
+          "If the target is less, move to the left child node",
+          "If the target is greater, move to the right child node",
+          "Repeat until finding the target or reaching a leaf node (not found)"
+        ],
+        "elements": {
+          "node": "comparison point",
+          "leftChild": "smaller comparison",
+          "rightChild": "larger comparison"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "node",
+            "leftChild",
+            "rightChild"
+          ],
+          "secondaryElements": [
+            "parentNode",
+            "leafNode"
+          ],
+          "animations": [
+            "compare",
+            "move"
+          ],
+          "interactiveElements": [
+            "clickableNode",
+            "dragDrop"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "tree"
+          },
+          "colorScheme": {
+            "primary": "#4CAF50",
+            "secondary": "#2196F3",
+            "highlight": "#FFC107"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T15:29:50.451Z",
+    "algorithmType": "Binary Search",
+    "complexity": {
+      "time": "O(log n)",
+      "space": "O(1)"
+    }
+  }
+}

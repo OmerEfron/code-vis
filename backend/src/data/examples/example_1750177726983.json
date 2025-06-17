@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Fibonacci",
+      "category": "Mathematical",
+      "timeComplexity": "O(2^n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "The Fibonacci algorithm calculates the nth Fibonacci number iteratively by summing the previous two numbers starting from 0 and 1."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "The position of the Fibonacci number to calculate",
+          "constraints": [
+            "Integer",
+            "n >= 0"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "n": 6
+          },
+          "expectedOutput": 8
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Growing Plants",
+        "description": "Imagine planting seeds where each plant represents a Fibonacci number, and growth depends on the sum of the previous two plants.",
+        "learningStyle": "visual",
+        "steps": [
+          "Plant seeds for 0 and 1",
+          "Calculate the sum of the last two plants to grow the next plant",
+          "Repeat the process to grow plants in Fibonacci sequence"
+        ],
+        "elements": {
+          "seeds": "initial values",
+          "plants": "Fibonacci numbers",
+          "growth": "sum calculation"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "plant",
+            "seed"
+          ],
+          "secondaryElements": [
+            "sunlight",
+            "water"
+          ],
+          "animations": [
+            "grow",
+            "sum",
+            "compare"
+          ],
+          "interactiveElements": [
+            "clickable-seeds",
+            "slider"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "linear"
+          },
+          "colorScheme": {
+            "primary": "#2ECC71",
+            "secondary": "#3498DB",
+            "highlight": "#F39C12"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T16:28:46.984Z",
+    "algorithmType": "Fibonacci",
+    "complexity": {
+      "time": "O(2^n)",
+      "space": "O(1)"
+    }
+  }
+}

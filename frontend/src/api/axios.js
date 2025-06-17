@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 
 const api = axios.create({
     baseURL: BACKEND_URL,
-    timeout: 10000,
+    timeout: 30000, // Increased for LLM calls
     headers: {
         'Content-Type': 'application/json'
     }
@@ -58,6 +58,38 @@ export const analyzeHuffman = async (inputString) => {
         return response.data;
     } catch (error) {
         console.error('Huffman Analysis Error:', error);
+        throw error;
+    }
+};
+
+export const analyzeCode = async (code) => {
+    try {
+        const response = await api.post('/api/analyze', { 
+            code: code 
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Code Analysis Error:', error);
+        throw error;
+    }
+};
+
+export const getExamples = async () => {
+    try {
+        const response = await api.get('/api/examples');
+        return response.data;
+    } catch (error) {
+        console.error('Examples Error:', error);
+        throw error;
+    }
+};
+
+export const getVisualizationConfig = async (algorithmType) => {
+    try {
+        const response = await api.get(`/api/visualization/${algorithmType}`);
+        return response.data;
+    } catch (error) {
+        console.error('Visualization Config Error:', error);
         throw error;
     }
 };

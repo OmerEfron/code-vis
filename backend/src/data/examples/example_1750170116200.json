@@ -1,0 +1,79 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Iterative Loop",
+      "category": "Iteration",
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "An iterative loop that decrements the value of i until it reaches 0."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "i",
+          "type": "number",
+          "description": "Initial value of i",
+          "constraints": [
+            "Integer"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "i": 10
+          },
+          "expectedOutput": "0"
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Countdown Timer",
+        "description": "Visualize a timer counting down from an initial value to zero",
+        "learningStyle": "visual",
+        "steps": [
+          "Start the timer at the initial value",
+          "Decrement the timer by 1",
+          "Repeat until the timer reaches zero"
+        ],
+        "elements": {
+          "timer": "value of i"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "timer"
+          ],
+          "secondaryElements": [
+            "decrement-button"
+          ],
+          "animations": [
+            "countdown",
+            "fade"
+          ],
+          "interactiveElements": [
+            "button"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "linear"
+          },
+          "colorScheme": {
+            "primary": "#4A90E2",
+            "secondary": "#F5A623",
+            "highlight": "#7ED321"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T14:21:56.200Z",
+    "algorithmType": "Iterative Loop",
+    "complexity": {
+      "time": "O(n)",
+      "space": "O(1)"
+    }
+  }
+}

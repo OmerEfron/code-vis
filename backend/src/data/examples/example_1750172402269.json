@@ -1,0 +1,101 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Binary Search",
+      "category": "Searching",
+      "timeComplexity": "O(log n)",
+      "spaceComplexity": "O(1)",
+      "explanation": "Binary search is a divide and conquer algorithm that efficiently finds the target value in a sorted array by repeatedly dividing the search interval in half."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "arr",
+          "type": "array",
+          "description": "Input array to search",
+          "constraints": [
+            "sorted"
+          ]
+        },
+        {
+          "name": "target",
+          "type": "number",
+          "description": "Target value to find in the array",
+          "constraints": []
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "arr": [
+              1,
+              3,
+              5,
+              7,
+              9
+            ],
+            "target": 5
+          },
+          "expectedOutput": 2
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Binary Search in a Sorted Bookshelf",
+        "description": "Imagine searching for a specific book in a library with shelves of books sorted in ascending order of their book numbers.",
+        "learningStyle": "visual",
+        "steps": [
+          "Start at the middle shelf",
+          "Compare the book number with the target book number",
+          "If found, return the shelf number",
+          "If target is smaller, move to the left half of shelves",
+          "If target is larger, move to the right half of shelves",
+          "Repeat until the book is found or all shelves are checked"
+        ],
+        "elements": {
+          "book": "array element",
+          "shelf": "current search interval",
+          "book number": "value comparison"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "book",
+            "shelf"
+          ],
+          "secondaryElements": [
+            "book-number",
+            "direction-arrow"
+          ],
+          "animations": [
+            "slide",
+            "highlight",
+            "compare"
+          ],
+          "interactiveElements": [
+            "clickable-books",
+            "slider"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "linear"
+          },
+          "colorScheme": {
+            "primary": "#4A90E2",
+            "secondary": "#F5A623",
+            "highlight": "#7ED321"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T15:00:02.269Z",
+    "algorithmType": "Binary Search",
+    "complexity": {
+      "time": "O(log n)",
+      "space": "O(1)"
+    }
+  }
+}

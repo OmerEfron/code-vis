@@ -1,0 +1,96 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Bubble Sort",
+      "category": "Sorting",
+      "timeComplexity": "O(n^2)",
+      "spaceComplexity": "O(1)",
+      "explanation": "Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. The pass through the list is repeated until no swaps are needed, which indicates that the list is sorted."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "arr",
+          "type": "array",
+          "description": "Input array to be sorted",
+          "constraints": [
+            "Array of numbers"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "arr": [
+              64,
+              34,
+              25,
+              12
+            ]
+          },
+          "expectedOutput": [
+            12,
+            25,
+            34,
+            64
+          ]
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Bubble Tea Shop",
+        "description": "Imagine bubble teas of different sizes lined up in a row, where each tea represents a number in the array",
+        "learningStyle": "visual",
+        "steps": [
+          "Start at the beginning of the row",
+          "Compare the size of adjacent bubble teas",
+          "Swap the teas if they are in the wrong order (smaller tea before larger tea)",
+          "Repeat the process until no more swaps are needed"
+        ],
+        "elements": {
+          "bubbleTea": "array elements",
+          "row": "current position",
+          "size": "value comparison"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "bubbleTea",
+            "swap-indicator"
+          ],
+          "secondaryElements": [
+            "size-indicator",
+            "swap-animation"
+          ],
+          "animations": [
+            "swap",
+            "highlight",
+            "compare"
+          ],
+          "interactiveElements": [
+            "clickable-teas",
+            "size-slider"
+          ],
+          "layout": {
+            "type": "horizontal",
+            "arrangement": "linear"
+          },
+          "colorScheme": {
+            "primary": "#FFC107",
+            "secondary": "#9C27B0",
+            "highlight": "#4CAF50"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T15:31:28.366Z",
+    "algorithmType": "Bubble Sort",
+    "complexity": {
+      "time": "O(n^2)",
+      "space": "O(1)"
+    }
+  }
+}

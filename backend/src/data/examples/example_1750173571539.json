@@ -1,0 +1,96 @@
+{
+  "success": true,
+  "analysis": {
+    "algorithm": {
+      "algorithmType": "Bubble Sort",
+      "category": "Sorting",
+      "timeComplexity": "O(n^2)",
+      "spaceComplexity": "O(1)",
+      "explanation": "Bubble Sort is a simple comparison-based sorting algorithm. It repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order."
+    },
+    "inputs": {
+      "inputs": [
+        {
+          "name": "arr",
+          "type": "array",
+          "description": "Input array to be sorted",
+          "constraints": [
+            "Non-empty array"
+          ]
+        }
+      ],
+      "examples": [
+        {
+          "input": {
+            "arr": [
+              64,
+              34,
+              25,
+              12
+            ]
+          },
+          "expectedOutput": [
+            12,
+            25,
+            34,
+            64
+          ]
+        }
+      ]
+    },
+    "metaphors": [
+      {
+        "name": "Bubble Tea Shop",
+        "description": "Imagine bubble teas of different sizes lined up at a shop, where each tea represents a number in the array",
+        "learningStyle": "visual",
+        "steps": [
+          "Start at the beginning of the line",
+          "Compare the sizes of adjacent bubble teas",
+          "If a larger tea is on the left, swap them",
+          "Repeat until the largest tea 'bubbles up' to the end"
+        ],
+        "elements": {
+          "bubbleTeas": "array elements",
+          "line": "current position",
+          "size": "value comparison"
+        },
+        "visualProperties": {
+          "primaryElements": [
+            "bubbleTea",
+            "line-marker"
+          ],
+          "secondaryElements": [
+            "size-indicator",
+            "swap-arrow"
+          ],
+          "animations": [
+            "move",
+            "highlight",
+            "swap"
+          ],
+          "interactiveElements": [
+            "clickable-teas",
+            "size-slider"
+          ],
+          "layout": {
+            "type": "vertical",
+            "arrangement": "linear"
+          },
+          "colorScheme": {
+            "primary": "#FFC0CB",
+            "secondary": "#FFD700",
+            "highlight": "#FF6347"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "savedAt": "2025-06-17T15:19:31.539Z",
+    "algorithmType": "Bubble Sort",
+    "complexity": {
+      "time": "O(n^2)",
+      "space": "O(1)"
+    }
+  }
+}
