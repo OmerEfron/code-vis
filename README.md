@@ -69,6 +69,42 @@ npm run dev
    - Frontend: `http://localhost:3001`
    - Backend API: `http://localhost:3000`
 
+### Running with Docker
+
+This project is fully containerized and can be run with a single command using Docker Compose.
+
+1.  **Prerequisites:**
+    *   [Docker](https://www.docker.com/get-started) installed on your system.
+    *   An OpenAI API key.
+
+2.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd codeviz2
+    ```
+
+3.  **Configure Environment:**
+    Create a `.env` file in the `backend` directory with your OpenAI API key. You can copy the example file if it exists, or create a new one:
+    ```bash
+    # e.g., echo "OPENAI_API_KEY=your_key_here" > backend/.env
+    ```
+
+4.  **Build and Run:**
+    ```bash
+    docker-compose up --build
+    ```
+    The `--build` flag is only necessary the first time you run the command, or when you have made changes to the code.
+
+5.  **Access the application:**
+    *   **Frontend:** `http://localhost:3001`
+    *   **Backend:** `http://localhost:3000`
+
+6.  **Stopping the application:**
+    To stop the containers, press `Ctrl+C` in the terminal where `docker-compose` is running, or run the following command from the project root:
+    ```bash
+    docker-compose down
+    ```
+
 ### Environment Variables
 
 **Backend (.env):**
@@ -85,90 +121,4 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 
 ## 📁 Project Structure
 
-```
-code-viz/
-├── frontend/                 # Next.js frontend application
-│   ├── src/
-│   │   ├── app/             # Next.js app directory (layout, page)
-│   │   ├── components/      # React components
-│   │   │   ├── ui/          # Reusable UI components (Button, Card)
-│   │   │   ├── huffman/     # Huffman-specific components
-│   │   │   └── visualizations/ # Algorithm visualization components
-│   │   ├── styles/          # CSS and design tokens
-│   │   └── api/             # API client functions
-│   ├── public/              # Static assets (favicon, etc.)
-│   └── package.json         # Frontend dependencies
-├── backend/                 # Node.js backend server
-│   ├── src/
-│   │   ├── routes/          # API route handlers
-│   │   ├── controllers/     # Business logic controllers
-│   │   ├── services/        # LLM and algorithm services
-│   │   └── server.js        # Server entry point
-│   └── package.json         # Backend dependencies
-├── schemas/                 # Shared validation schemas
-└── README.md               # This file
-```
-
-## 🎯 Usage
-
-### Huffman Encoding
-1. Navigate to the Huffman Encoding tab
-2. Enter your text in the input field
-3. Click "Analyze & Visualize" 
-4. Watch the step-by-step compression process
-5. Use playback controls to adjust visualization speed
-
-### Code Analysis
-1. Go to the Code Analyzer tab
-2. Paste your algorithm code
-3. Get AI-powered analysis with:
-   - Algorithm type identification
-   - Time/space complexity analysis
-   - Real-world metaphors and explanations
-   - Best use cases and limitations
-
-### Examples
-1. Browse the Examples tab
-2. Filter by category or difficulty
-3. Click on any algorithm to see:
-   - Interactive visualization
-   - Detailed analysis
-   - Source code
-   - Performance characteristics
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork the repository**
-2. **Create a feature branch:** `git checkout -b feature/amazing-feature`
-3. **Make your changes** and test thoroughly
-4. **Commit your changes:** `git commit -m 'Add amazing feature'`
-5. **Push to your branch:** `git push origin feature/amazing-feature`
-6. **Open a Pull Request**
-
-### Development Guidelines
-- Follow the existing code style and structure
-- Add proper TypeScript types where applicable
-- Test your changes thoroughly
-- Update documentation as needed
-
-## 🐛 Troubleshooting
-
-**Common Issues:**
-
-- **Backend not starting:** Check if OpenAI API key is set in `.env`
-- **Frontend build errors:** Clear `.next` folder and reinstall dependencies
-- **Visualization not working:** Ensure backend is running and accessible
-- **API errors:** Check browser console and backend logs
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with modern web technologies
-- Powered by OpenAI for intelligent analysis
-- Inspired by the need to make algorithms more accessible
-- Community-driven with educational focus 
+## 📋 Additional Information
