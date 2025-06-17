@@ -2,7 +2,7 @@ services:
   - type: web
     name: codeviz-backend
     runtime: docker
-    repo: https://github.com/your-username/your-repo-name # IMPORTANT: Change this to your repository URL
+    repo: https://github.com/OmerEfron/code-vis
     region: oregon # Or choose a region closer to you
     plan: free
     healthCheckPath: /api/health
@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 3000
       - key: FRONTEND_URL
-        value: https://your-frontend-url.vercel.app # This will be your Vercel URL
+        value: https://codeviz.vercel.app # This will be your Vercel URL
       - key: NODE_ENV
         value: production
       - key: OPENAI_API_KEY
