@@ -61,6 +61,12 @@ app.use('/api/analyze', llmAnalysisRoutes);
 app.use('/api/examples', exampleRoutes);
 app.use('/api/visualization', visualizationRoutes);
 app.use('/api/algorithms', algorithmsRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
     res.status(404).json({
