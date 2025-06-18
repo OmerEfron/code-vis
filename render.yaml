@@ -6,7 +6,8 @@ services:
     region: oregon # Or choose a region closer to you
     plan: free
     healthCheckPath: /api/health
-    dockerfile: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
     envVars:
       - key: PORT
         value: 3000
