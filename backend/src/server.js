@@ -39,6 +39,7 @@ const allowedOriginsSet = new Set(
 );
 allowedOriginsSet.add('http://localhost:3000'); // for backend testing
 allowedOriginsSet.add('http://localhost:3001');
+allowedOriginsSet.add('https://code-vis-beige.vercel.app');
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -48,12 +49,14 @@ app.use(cors({
         if (allowedOriginsSet.has(normalizedOrigin)) {
             callback(null, true);
         } else {
+            console.log('CORS blocked origin:', normalizedOrigin);
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    maxAge: 86400 // Cache preflight request for 24 hours
 }));
 
 // Parse JSON bodies with size limit
