@@ -30,18 +30,22 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Enhanced CORS configuration
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3001';
+const allowedOriginsSet = new Set(
+    rawAllowedOrigins
+        .split(',')
+        .map(o => o.trim().replace(/\/$/, '')) // trim spaces and trailing slash
+        .filter(Boolean)
+);
+allowedOriginsSet.add('http://localhost:3000'); // for backend testing
+allowedOriginsSet.add('http://localhost:3001');
+
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests with no origin (like curl or mobile apps)
         if (!origin) return callback(null, true);
-        
-        const allowedOrigins = [
-            process.env.FRONTEND_URL || 'http://localhost:3001',
-            'http://localhost:3000', // Allow backend testing
-            'http://localhost:3001', // Default frontend
-        ];
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        if (allowedOriginsSet.has(normalizedOrigin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
